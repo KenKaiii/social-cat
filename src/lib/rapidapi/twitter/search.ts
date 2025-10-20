@@ -1,10 +1,16 @@
-import axios from 'axios';
+import { rapidApiAxios } from '../../axios-config';
+import { logger } from '../../logger';
 
 /**
  * Twitter Search API via RapidAPI
  *
  * Host: twitter-aio.p.rapidapi.com
  * Endpoint: /search/{query}
+ *
+ * Updated to use:
+ * - Automatic retries with exponential backoff (4 retries)
+ * - Handles 429 rate limit errors intelligently
+ * - Structured logging
  */
 
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
@@ -18,6 +24,10 @@ interface SearchParams {
   until?: string; // Format: YYYY-MM-DD
   removePostsWithLinks?: boolean;
   removePostsWithMedia?: boolean;
+  // Engagement filters (for finding best performing tweets)
+  minimumLikesCount?: number;
+  minimumRetweetsCount?: number;
+  minimumRepliesCount?: number;
 }
 
 interface Tweet {
@@ -44,10 +54,15 @@ export async function searchTwitter(params: SearchParams): Promise<SearchRespons
     throw new Error('RAPIDAPI_KEY not set in environment variables');
   }
 
-  // Build filters object for since/until
-  const filters: Record<string, string> = {};
+  // Build filters object for date range and engagement thresholds
+  const filters: Record<string, string | number | boolean> = {};
   if (params.since) filters.since = params.since;
   if (params.until) filters.until = params.until;
+  if (params.minimumLikesCount !== undefined) filters.minimumLikesCount = params.minimumLikesCount;
+  if (params.minimumRetweetsCount !== undefined) filters.minimumRetweetsCount = params.minimumRetweetsCount;
+  if (params.minimumRepliesCount !== undefined) filters.minimumRepliesCount = params.minimumRepliesCount;
+  if (params.removePostsWithLinks) filters.removePostsWithLinks = params.removePostsWithLinks;
+  if (params.removePostsWithMedia) filters.removePostsWithMedia = params.removePostsWithMedia;
 
   const options = {
     method: 'GET',
@@ -65,7 +80,8 @@ export async function searchTwitter(params: SearchParams): Promise<SearchRespons
   };
 
   try {
-    const response = await axios.request(options);
+    logger.info({ query: params.query, count: params.count }, 'Searching Twitter via RapidAPI');
+    const response = await rapidApiAxios.request(options);
 
     // Parse the complex Twitter AIO response structure
     let results: Tweet[] = [];
@@ -128,17 +144,24 @@ export async function searchTwitter(params: SearchParams): Promise<SearchRespons
       });
     }
 
+    logger.info(
+      { resultsCount: results.length, query: params.query },
+      'Twitter search completed'
+    );
+
     return {
       results,
       next_cursor: response.data.next_cursor,
     };
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error('Twitter Search API Error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-      });
-    }
+    logger.error(
+      {
+        error,
+        query: params.query,
+        status: (error as { response?: { status?: number } }).response?.status,
+      },
+      'Twitter Search API Error'
+    );
     throw error;
   }
 }

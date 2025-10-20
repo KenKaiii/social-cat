@@ -12,7 +12,12 @@ import { logger, logApiRequest, logApiError } from '@/lib/logger';
  * POST /api/workflows/test-reply
  * Body: {
  *   searchQuery: string,
- *   systemPrompt?: string
+ *   systemPrompt?: string,
+ *   minimumLikesCount?: number,
+ *   minimumRetweetsCount?: number,
+ *   searchFromToday?: boolean,
+ *   removePostsWithLinks?: boolean,
+ *   removePostsWithMedia?: boolean
  * }
  */
 
@@ -23,7 +28,15 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { searchQuery, systemPrompt } = body;
+    const {
+      searchQuery,
+      systemPrompt,
+      minimumLikesCount,
+      minimumRetweetsCount,
+      searchFromToday,
+      removePostsWithLinks,
+      removePostsWithMedia
+    } = body;
 
     if (!searchQuery || typeof searchQuery !== 'string') {
       logApiRequest('POST', '/api/workflows/test-reply', 400);
@@ -36,13 +49,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.info({ searchQuery, hasCustomPrompt: !!systemPrompt }, 'Running test reply workflow');
+    logger.info({
+      searchQuery,
+      hasCustomPrompt: !!systemPrompt,
+      minimumLikesCount,
+      minimumRetweetsCount,
+      searchFromToday
+    }, 'Running test reply workflow');
 
     // Run workflow in dry-run mode
     const result = await replyToTweetsWorkflow({
       searchQuery,
       systemPrompt,
       dryRun: true,
+      searchParams: {
+        minimumLikesCount,
+        minimumRetweetsCount,
+        searchFromToday,
+        removePostsWithLinks,
+        removePostsWithMedia,
+      },
     });
 
     // Check if workflow returned a valid result
@@ -96,6 +122,11 @@ export async function GET() {
     body: {
       searchQuery: 'string (required)',
       systemPrompt: 'string (optional)',
+      minimumLikesCount: 'number (optional)',
+      minimumRetweetsCount: 'number (optional)',
+      searchFromToday: 'boolean (optional)',
+      removePostsWithLinks: 'boolean (optional)',
+      removePostsWithMedia: 'boolean (optional)',
     },
   });
 }

@@ -2,9 +2,16 @@ import { createPipeline } from '../Pipeline';
 import { searchTwitter, type Tweet } from '@/lib/rapidapi/twitter';
 import { replyToTweet } from '@/lib/twitter';
 import { generateTweetReply } from '@/lib/openai';
+import { logger } from '@/lib/logger';
 
 /**
  * Reply to Tweets Workflow
+ *
+ * Production-ready with:
+ * - Automatic retries (RapidAPI: 4 attempts, Twitter/OpenAI: 3 attempts)
+ * - Circuit breakers to prevent hammering failing APIs
+ * - Rate limiting (Twitter: 50 actions/hour, OpenAI: 500 req/min)
+ * - Structured logging to logs/app.log
  *
  * Steps:
  * 1. Search for tweets matching criteria (from today, no links/media)
@@ -26,6 +33,13 @@ interface WorkflowConfig {
   searchQuery: string;
   systemPrompt?: string;
   dryRun?: boolean; // If true, skip posting to Twitter
+  searchParams?: {
+    minimumLikesCount?: number;
+    minimumRetweetsCount?: number;
+    searchFromToday?: boolean;
+    removePostsWithLinks?: boolean;
+    removePostsWithMedia?: boolean;
+  };
 }
 
 /**
@@ -85,33 +99,48 @@ export async function replyToTweetsWorkflow(config: WorkflowConfig) {
 
   const pipeline = createPipeline<WorkflowContext>();
 
+  // Prepare search parameters with defaults
+  const searchParams = config.searchParams || {};
+  const today = new Date().toISOString().split('T')[0];
+
   const result = await pipeline
     .step('search-tweets', async (ctx) => {
-      console.log(`🔍 Searching for tweets with query: "${ctx.searchQuery}"`);
+      logger.info({ query: ctx.searchQuery, searchParams }, '🔍 Searching for tweets');
 
       const results = await searchTwitter({
         query: ctx.searchQuery,
         category: 'Latest',
         count: 20,
-        // Note: 'since' filter removed as Twitter AIO API doesn't support it properly
-        removePostsWithLinks: true,
-        removePostsWithMedia: true,
+        since: searchParams.searchFromToday ? today : undefined,
+        minimumLikesCount: searchParams.minimumLikesCount,
+        minimumRetweetsCount: searchParams.minimumRetweetsCount,
+        removePostsWithLinks: searchParams.removePostsWithLinks ?? true,
+        removePostsWithMedia: searchParams.removePostsWithMedia ?? true,
       });
 
-      console.log(`✅ Found ${results.results.length} tweets`);
+      logger.info({ count: results.results.length }, '✅ Found tweets');
       return { ...ctx, tweets: results.results };
     })
     .step('select-hottest', async (ctx) => {
-      console.log('🎯 Selecting best tweet to reply to...');
+      logger.info('🎯 Selecting best tweet to reply to');
 
       const selected = selectBestTweet(ctx.tweets || []);
 
       if (!selected) {
+        logger.warn({ availableTweets: ctx.tweets?.length || 0 }, 'No suitable tweet found');
         throw new Error('No suitable tweet found to reply to');
       }
 
-      console.log(`✅ Selected tweet from @${selected.user_screen_name}: "${selected.text.substring(0, 50)}..."`);
-      console.log(`   Engagement: ${selected.likes || 0} likes, ${selected.retweets || 0} retweets`);
+      logger.info(
+        {
+          username: selected.user_screen_name,
+          tweetId: selected.tweet_id,
+          likes: selected.likes || 0,
+          retweets: selected.retweets || 0,
+          text: selected.text.substring(0, 100),
+        },
+        `✅ Selected tweet from @${selected.user_screen_name}`
+      );
 
       return { ...ctx, selectedTweet: selected };
     })
@@ -120,7 +149,10 @@ export async function replyToTweetsWorkflow(config: WorkflowConfig) {
         throw new Error('No tweet selected');
       }
 
-      console.log('🤖 Generating AI reply...');
+      logger.info(
+        { tweetId: ctx.selectedTweet.tweet_id, hasSystemPrompt: !!ctx.systemPrompt },
+        '🤖 Generating AI reply'
+      );
 
       const reply = await generateTweetReply(
         ctx.selectedTweet.text,
@@ -128,7 +160,7 @@ export async function replyToTweetsWorkflow(config: WorkflowConfig) {
         !isDryRun // In dry-run mode, don't use default prompt
       );
 
-      console.log(`✅ Generated reply: "${reply}"`);
+      logger.info({ replyLength: reply.length, reply: reply.substring(0, 100) }, '✅ Generated reply');
 
       return { ...ctx, generatedReply: reply };
     })
@@ -138,21 +170,27 @@ export async function replyToTweetsWorkflow(config: WorkflowConfig) {
       }
 
       if (isDryRun) {
-        console.log('🧪 DRY RUN MODE - Skipping actual post to Twitter');
-        console.log(`   Would reply to tweet ${ctx.selectedTweet.tweet_id}`);
-        console.log(`   With: "${ctx.generatedReply}"`);
+        logger.info(
+          {
+            tweetId: ctx.selectedTweet.tweet_id,
+            reply: ctx.generatedReply,
+          },
+          '🧪 DRY RUN MODE - Skipping actual post to Twitter'
+        );
         return { ...ctx, replyResult: { dryRun: true, skipped: true } };
       }
 
-      console.log('📤 Posting reply to Twitter...');
+      logger.info({ tweetId: ctx.selectedTweet.tweet_id }, '📤 Posting reply to Twitter');
 
       const result = await replyToTweet(
         ctx.selectedTweet.tweet_id,
         ctx.generatedReply
       );
 
-      console.log('✅ Reply posted successfully!');
-      console.log(`   Tweet ID: ${result.id}`);
+      logger.info(
+        { tweetId: ctx.selectedTweet.tweet_id, replyId: result.id },
+        '✅ Reply posted successfully'
+      );
 
       return { ...ctx, replyResult: result };
     })

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Heart, Repeat2, MessageCircle, Eye, FlaskConical, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface TestResult {
@@ -27,6 +28,13 @@ export default function TestRepliesPage() {
   const [result, setResult] = useState<TestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Search filter controls
+  const [minimumLikes, setMinimumLikes] = useState(5);
+  const [minimumRetweets, setMinimumRetweets] = useState(2);
+  const [searchFromToday, setSearchFromToday] = useState(true);
+  const [removeLinks, setRemoveLinks] = useState(true);
+  const [removeMedia, setRemoveMedia] = useState(true);
+
   const runTest = async () => {
     setLoading(true);
     setError(null);
@@ -41,6 +49,11 @@ export default function TestRepliesPage() {
         body: JSON.stringify({
           searchQuery,
           systemPrompt, // Send as-is, including empty string
+          minimumLikesCount: minimumLikes,
+          minimumRetweetsCount: minimumRetweets,
+          searchFromToday,
+          removePostsWithLinks: removeLinks,
+          removePostsWithMedia: removeMedia,
         }),
       });
 
@@ -99,12 +112,83 @@ export default function TestRepliesPage() {
                     value={systemPrompt}
                     onChange={(e) => setSystemPrompt(e.target.value)}
                     placeholder="Enter your custom system prompt here. Leave blank for no system prompt (GPT will use only the tweet context)..."
-                    rows={12}
+                    rows={6}
                     className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   />
                   <p className="text-xs text-secondary">
                     The AI will use ONLY this prompt. Leave empty to test with no guidance.
                   </p>
+                </div>
+
+                {/* Search Filters */}
+                <div className="space-y-3 pt-2 border-t border-border">
+                  <h3 className="text-sm font-bold text-foreground">Search Filters</h3>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-foreground">
+                        Min Likes
+                      </label>
+                      <Input
+                        type="number"
+                        value={minimumLikes}
+                        onChange={(e) => setMinimumLikes(Number(e.target.value))}
+                        min={0}
+                        className="h-8"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-foreground">
+                        Min Retweets
+                      </label>
+                      <Input
+                        type="number"
+                        value={minimumRetweets}
+                        onChange={(e) => setMinimumRetweets(Number(e.target.value))}
+                        min={0}
+                        className="h-8"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={searchFromToday}
+                        onChange={(e) => setSearchFromToday(e.target.checked)}
+                        className="w-4 h-4 rounded border-border bg-input accent-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
+                      />
+                      <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">
+                        Only tweets from today
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={removeLinks}
+                        onChange={(e) => setRemoveLinks(e.target.checked)}
+                        className="w-4 h-4 rounded border-border bg-input accent-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
+                      />
+                      <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">
+                        Remove tweets with links
+                      </span>
+                    </label>
+
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={removeMedia}
+                        onChange={(e) => setRemoveMedia(e.target.checked)}
+                        className="w-4 h-4 rounded border-border bg-input accent-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
+                      />
+                      <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">
+                        Remove tweets with images/videos
+                      </span>
+                    </label>
+                  </div>
                 </div>
 
                 <button

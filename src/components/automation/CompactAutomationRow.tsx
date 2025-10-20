@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Play, Loader2, Settings2, Check, X } from 'lucide-react';
+import { Play, Loader2, Settings2, Check, X, Filter } from 'lucide-react';
 import { SchedulePicker } from './SchedulePicker';
+import { Input } from '@/components/ui/input';
 
 interface CompactAutomationRowProps {
   title: string;
@@ -28,6 +29,14 @@ export function CompactAutomationRow({
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [promptOpen, setPromptOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Search filter states (for reply-to-tweets job)
+  const [minimumLikes, setMinimumLikes] = useState(5);
+  const [minimumRetweets, setMinimumRetweets] = useState(2);
+  const [searchFromToday, setSearchFromToday] = useState(true);
+  const [removeLinks, setRemoveLinks] = useState(true);
+  const [removeMedia, setRemoveMedia] = useState(true);
 
   const handleTest = async () => {
     setTesting(true);
@@ -119,6 +128,97 @@ export function CompactAutomationRow({
             </Button>
           </DialogContent>
         </Dialog>
+
+        {/* Filters Button (only for reply-to-tweets) */}
+        {jobName === 'twitter-reply-tweets' && (
+          <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                <Filter className="h-3 w-3" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md bg-surface border-border">
+              <DialogHeader>
+                <DialogTitle className="text-base font-black">Search Filters</DialogTitle>
+                <DialogDescription className="text-xs text-secondary">
+                  Configure tweet search criteria for better targeting
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground">
+                      Min Likes
+                    </label>
+                    <Input
+                      type="number"
+                      value={minimumLikes}
+                      onChange={(e) => setMinimumLikes(Number(e.target.value))}
+                      min={0}
+                      className="h-8"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground">
+                      Min Retweets
+                    </label>
+                    <Input
+                      type="number"
+                      value={minimumRetweets}
+                      onChange={(e) => setMinimumRetweets(Number(e.target.value))}
+                      min={0}
+                      className="h-8"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={searchFromToday}
+                      onChange={(e) => setSearchFromToday(e.target.checked)}
+                      className="w-4 h-4 rounded border-border bg-input accent-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
+                    />
+                    <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">
+                      Only tweets from today
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={removeLinks}
+                      onChange={(e) => setRemoveLinks(e.target.checked)}
+                      className="w-4 h-4 rounded border-border bg-input accent-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
+                    />
+                    <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">
+                      Remove tweets with links
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={removeMedia}
+                      onChange={(e) => setRemoveMedia(e.target.checked)}
+                      className="w-4 h-4 rounded border-border bg-input accent-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background cursor-pointer"
+                    />
+                    <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">
+                      Remove tweets with images/videos
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <Button onClick={() => setFiltersOpen(false)} className="h-8 text-xs">
+                Save Filters
+              </Button>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {/* Test Button */}
         <Button
