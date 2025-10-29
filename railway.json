@@ -1,7 +1,7 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "buildCommand": "npm install && npm run build"
+    "buildCommand": "npm install && npm run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/"
   },
   "deploy": {
     "preDeployCommand": ["npm run db:push:force"],
