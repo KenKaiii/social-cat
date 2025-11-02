@@ -565,6 +565,7 @@ export type NewWordPressSettings = typeof wordpressSettingsTableSQLite.$inferIns
 export const workflowsTableSQLite = sqliteTable('workflows', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
+  organizationId: text('organization_id'), // Optional for now, will be required after migration
   name: text('name').notNull(),
   description: text('description'),
 
@@ -597,6 +598,7 @@ export const workflowsTableSQLite = sqliteTable('workflows', {
   runCount: integer('run_count').notNull().default(0),
 }, (table) => ({
   userIdIdx: sqliteIndex('workflows_user_id_idx').on(table.userId),
+  organizationIdIdx: sqliteIndex('workflows_organization_id_idx').on(table.organizationId),
   statusIdx: sqliteIndex('workflows_status_idx').on(table.status),
   triggerTypeIdx: sqliteIndex('workflows_trigger_type_idx').on(sql`json_extract(${table.trigger}, '$.type')`),
 }));
@@ -606,6 +608,7 @@ export const workflowRunsTableSQLite = sqliteTable('workflow_runs', {
   id: text('id').primaryKey(),
   workflowId: text('workflow_id').notNull(),
   userId: text('user_id').notNull(),
+  organizationId: text('organization_id'), // Optional for now, will be required after migration
 
   status: text('status').notNull(), // running | success | error
   triggerType: text('trigger_type').notNull(), // cron | manual | webhook | etc
@@ -623,6 +626,7 @@ export const workflowRunsTableSQLite = sqliteTable('workflow_runs', {
 }, (table) => ({
   workflowIdIdx: sqliteIndex('workflow_runs_workflow_id_idx').on(table.workflowId),
   userIdIdx: sqliteIndex('workflow_runs_user_id_idx').on(table.userId),
+  organizationIdIdx: sqliteIndex('workflow_runs_organization_id_idx').on(table.organizationId),
   statusIdx: sqliteIndex('workflow_runs_status_idx').on(table.status),
   startedAtIdx: sqliteIndex('workflow_runs_started_at_idx').on(table.startedAt),
 }));
@@ -631,6 +635,7 @@ export const workflowRunsTableSQLite = sqliteTable('workflow_runs', {
 export const userCredentialsTableSQLite = sqliteTable('user_credentials', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
+  organizationId: text('organization_id'), // Optional for now, will be required after migration
   platform: text('platform').notNull(), // openai, anthropic, stripe, custom
   name: text('name').notNull(), // User-friendly name (e.g., "My OpenAI Key", "Production Stripe")
   encryptedValue: text('encrypted_value').notNull(), // AES-256 encrypted credential
@@ -640,10 +645,43 @@ export const userCredentialsTableSQLite = sqliteTable('user_credentials', {
   lastUsed: integer('last_used', { mode: 'timestamp' }),
 }, (table) => ({
   userIdIdx: sqliteIndex('user_credentials_user_id_idx').on(table.userId),
+  organizationIdIdx: sqliteIndex('user_credentials_organization_id_idx').on(table.organizationId),
   platformIdx: sqliteIndex('user_credentials_platform_idx').on(table.platform),
   userPlatformIdx: sqliteIndex('user_credentials_user_platform_idx').on(table.userId, table.platform),
 }));
 
+// Organizations table for SQLite (multi-tenancy support)
+export const organizationsTableSQLite = sqliteTable('organizations', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  ownerId: text('owner_id').notNull(), // User who created/owns the organization
+  plan: text('plan').notNull().default('free'), // free | pro | enterprise
+  settings: text('settings', { mode: 'json' }).$type<Record<string, unknown>>(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+}, (table) => ({
+  ownerIdIdx: sqliteIndex('organizations_owner_id_idx').on(table.ownerId),
+  slugIdx: sqliteIndex('organizations_slug_idx').on(table.slug),
+}));
+
+// Organization members table for SQLite (user-org relationship with roles)
+export const organizationMembersTableSQLite = sqliteTable('organization_members', {
+  id: text('id').primaryKey(),
+  organizationId: text('organization_id').notNull(),
+  userId: text('user_id').notNull(),
+  role: text('role').notNull().default('member'), // owner | admin | member | viewer
+  joinedAt: integer('joined_at', { mode: 'timestamp' }).notNull().default(sql`(unixepoch())`),
+}, (table) => ({
+  orgIdIdx: sqliteIndex('organization_members_org_id_idx').on(table.organizationId),
+  userIdIdx: sqliteIndex('organization_members_user_id_idx').on(table.userId),
+  orgUserIdx: sqliteIndex('organization_members_org_user_idx').on(table.organizationId, table.userId),
+}));
+
+export type Organization = typeof organizationsTableSQLite.$inferSelect;
+export type NewOrganization = typeof organizationsTableSQLite.$inferInsert;
+export type OrganizationMember = typeof organizationMembersTableSQLite.$inferSelect;
+export type NewOrganizationMember = typeof organizationMembersTableSQLite.$inferInsert;
 export type Workflow = typeof workflowsTableSQLite.$inferSelect;
 export type NewWorkflow = typeof workflowsTableSQLite.$inferInsert;
 export type WorkflowRun = typeof workflowRunsTableSQLite.$inferSelect;

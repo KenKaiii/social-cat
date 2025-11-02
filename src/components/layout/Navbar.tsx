@@ -8,10 +8,9 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Workflows', href: '/dashboard/workflows' },
   { name: 'Credentials', href: '/dashboard/credentials' },
-  { name: 'Social Media', href: '/social-media' },
-  { name: 'Content', href: '/content' },
   { name: 'Activity', href: '/dashboard/activity' },
   { name: 'Settings', href: '/settings' },
+  { name: 'Legacy', href: '/legacy/social-media' },
 ];
 
 export function Navbar() {

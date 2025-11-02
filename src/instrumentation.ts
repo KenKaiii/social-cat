@@ -70,5 +70,26 @@ export async function register() {
 
     logger.info('Initializing scheduler from instrumentation');
     await initializeScheduler();
+
+    // Initialize workflow queue and scheduler
+    logger.info('Initializing workflow execution system');
+    const { initializeWorkflowQueue } = await import('./lib/workflows/workflow-queue');
+    const { workflowScheduler } = await import('./lib/workflows/workflow-scheduler');
+
+    // Initialize workflow queue (10 concurrent workflows by default)
+    const queueInitialized = await initializeWorkflowQueue({
+      concurrency: 10,  // Run up to 10 workflows simultaneously
+      maxJobsPerMinute: 100,  // Rate limit: max 100 workflow executions per minute
+    });
+
+    if (queueInitialized) {
+      logger.info('✅ Workflow queue initialized (Redis-backed)');
+    } else {
+      logger.info('⚠️  Workflow queue disabled (no Redis) - using direct execution');
+    }
+
+    // Initialize workflow scheduler (for cron triggers)
+    await workflowScheduler.initialize();
+    logger.info('✅ Workflow scheduler initialized');
   }
 }

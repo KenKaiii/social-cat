@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
+import { queueWorkflowExecution, isWorkflowQueueAvailable } from '@/lib/workflows/workflow-queue';
 import { executeWorkflow } from '@/lib/workflows/executor';
 
 export const dynamic = 'force-dynamic';
@@ -7,6 +8,12 @@ export const dynamic = 'force-dynamic';
 /**
  * POST /api/workflows/[id]/run
  * Execute a workflow manually
+ *
+ * Uses queue system if Redis is configured, otherwise executes directly.
+ * Queue system provides:
+ * - Controlled concurrency (prevents resource exhaustion)
+ * - Automatic retries on failure
+ * - Job prioritization
  */
 export async function POST(
   request: NextRequest,
@@ -21,11 +28,30 @@ export async function POST(
   const { id } = await context.params;
 
   try {
-    // Optional: Accept trigger data from request body
+    // Optional: Accept trigger data and priority from request body
     const body = await request.json().catch(() => ({}));
     const triggerData = body.triggerData || {};
+    const priority = body.priority as number | undefined;
 
-    // Execute the workflow
+    // Use queue if available, otherwise execute directly
+    if (isWorkflowQueueAvailable()) {
+      const { jobId, queued } = await queueWorkflowExecution(
+        id,
+        session.user.id,
+        'manual',
+        triggerData,
+        { priority }
+      );
+
+      return NextResponse.json({
+        success: true,
+        queued,
+        jobId,
+        message: 'Workflow queued for execution',
+      });
+    }
+
+    // Fallback: Direct execution (no Redis)
     const result = await executeWorkflow(
       id,
       session.user.id,
@@ -47,6 +73,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       output: result.output,
+      queued: false,
     });
   } catch (error) {
     console.error('Failed to execute workflow:', error);

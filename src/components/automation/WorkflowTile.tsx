@@ -71,7 +71,7 @@ export function WorkflowTile({
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const response = await fetch(`/api/automation/settings?job=${jobName}`);
+        const response = await fetch(`/api/legacy/automation/settings?job=${jobName}`);
         if (response.ok) {
           const settings = await response.json();
 
@@ -183,7 +183,7 @@ export function WorkflowTile({
     };
 
     try {
-      await fetch('/api/automation/settings', {
+      await fetch('/api/legacy/automation/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -199,7 +199,7 @@ export function WorkflowTile({
   // Control job (start/stop) via scheduler
   const controlJob = async (action: 'start' | 'stop') => {
     try {
-      const response = await fetch('/api/jobs/control', {
+      const response = await fetch('/api/legacy/jobs/control', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -242,7 +242,7 @@ export function WorkflowTile({
           }
         : {};
 
-      const response = await fetch(`/api/jobs/trigger?job=${jobName}`, {
+      const response = await fetch(`/api/legacy/jobs/trigger?job=${jobName}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { db, useSQLite } from '@/lib/db';
-import { jobLogsTable, appSettingsTable } from '@/lib/schema';
-import { eq, count, and, like } from 'drizzle-orm';
+import { workflowsTableSQLite, workflowRunsTableSQLite } from '@/lib/schema';
+import { eq, count } from 'drizzle-orm';
 
 export async function GET() {
   try {
@@ -11,36 +11,38 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const userId = session.user?.id;
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID not found' }, { status: 400 });
+    }
+
     // Fetch all stats in parallel for better performance
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dbAny = db as any;
     const [
       successfulRuns,
       failedRuns,
-      enabledJobs,
+      activeWorkflows,
     ] = await Promise.all([
-      // Count successful job executions
+      // Count successful workflow executions
       dbAny.select({ count: count() })
-        .from(jobLogsTable)
-        .where(eq(jobLogsTable.status, 'success')) as Promise<Array<{ count: number }>>,
+        .from(workflowRunsTableSQLite)
+        .where(eq(workflowRunsTableSQLite.status, 'success')) as Promise<Array<{ count: number }>>,
 
-      // Count failed job executions
+      // Count failed workflow executions
       dbAny.select({ count: count() })
-        .from(jobLogsTable)
-        .where(eq(jobLogsTable.status, 'error')) as Promise<Array<{ count: number }>>,
+        .from(workflowRunsTableSQLite)
+        .where(eq(workflowRunsTableSQLite.status, 'error')) as Promise<Array<{ count: number }>>,
 
-      // Count enabled automations
+      // Count active workflows (not draft or paused)
       dbAny.select({ count: count() })
-        .from(appSettingsTable)
-        .where(and(
-          like(appSettingsTable.key, '%_enabled'),
-          eq(appSettingsTable.value, 'true')
-        )) as Promise<Array<{ count: number }>>,
+        .from(workflowsTableSQLite)
+        .where(eq(workflowsTableSQLite.status, 'active')) as Promise<Array<{ count: number }>>,
     ]);
 
     const successCount = successfulRuns[0]?.count || 0;
     const failCount = failedRuns[0]?.count || 0;
-    const activeJobsCount = enabledJobs[0]?.count || 0;
+    const activeJobsCount = activeWorkflows[0]?.count || 0;
     const totalExecutions = successCount + failCount;
 
     return NextResponse.json({
