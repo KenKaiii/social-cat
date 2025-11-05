@@ -16,6 +16,9 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
+    "test:watch": "vitest watch",
+    "test:generate": "tsx tests/scripts/generate-tests.ts",
+    "test:coverage": "tsx tests/scripts/check-coverage.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
@@ -154,6 +157,7 @@
     "eslint-config-next": "15.5.4",
     "jsdom": "^27.0.1",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "typescript": "^5",
     "vitest": "^3.2.4"
   },
