@@ -99,19 +99,11 @@ async function submitPostInternal(
     'Submitting Reddit post'
   );
 
-  const subreddit = await redditClient.getSubreddit(options.subreddit);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const subreddit: any = await (redditClient.getSubreddit(options.subreddit) as any);
 
-  let submission: {
-    id: string;
-    title: string;
-    selftext: string;
-    url: string;
-    author: { name: string };
-    subreddit: { display_name: string };
-    score: number;
-    num_comments: number;
-    permalink: string;
-  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let submission: any;
 
   if (options.url) {
     const linkSubmission = await subreddit.submitLink({
@@ -178,7 +170,8 @@ export async function commentOnPost(
 
   logger.info({ postId, textLength: text.length }, 'Commenting on Reddit post');
 
-  const submission = await redditClient.getSubmission(postId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const submission: any = await (redditClient.getSubmission(postId) as any);
   const comment = (await submission.reply(text)) as unknown as { id: string; permalink: string };
 
   logger.info({ commentId: comment.id }, 'Reddit comment posted');
@@ -202,7 +195,8 @@ export async function replyToComment(
 
   logger.info({ commentId, textLength: text.length }, 'Replying to Reddit comment');
 
-  const comment = await redditClient.getComment(commentId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const comment: any = await (redditClient.getComment(commentId) as any);
   const reply = (await comment.reply(text)) as unknown as { id: string; permalink: string };
 
   logger.info({ replyId: reply.id }, 'Reddit reply posted');
@@ -227,9 +221,11 @@ export async function getSubredditPosts(
 
   logger.info({ subreddit, sort, limit }, 'Fetching Reddit posts');
 
-  const sub = await redditClient.getSubreddit(subreddit);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sub = await (redditClient.getSubreddit(subreddit) as any);
 
-  let listing;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let listing: any;
   switch (sort) {
     case 'hot':
       listing = await sub.getHot({ limit });
@@ -284,9 +280,11 @@ export async function searchPosts(
 
   logger.info({ query, subreddit, limit }, 'Searching Reddit posts');
 
-  let results;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let results: any;
   if (subreddit) {
-    const sub = await redditClient.getSubreddit(subreddit);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sub = await (redditClient.getSubreddit(subreddit) as any);
     results = await sub.search({ query, limit });
   } else {
     results = await redditClient.search({ query, limit });
@@ -327,7 +325,8 @@ export async function upvotePost(postId: string): Promise<void> {
 
   logger.info({ postId }, 'Upvoting Reddit post');
 
-  const submission = await redditClient.getSubmission(postId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const submission = await (redditClient.getSubmission(postId) as any);
   await (submission as unknown as { upvote: () => Promise<void> }).upvote();
 
   logger.info('Reddit post upvoted');
@@ -343,7 +342,8 @@ export async function downvotePost(postId: string): Promise<void> {
 
   logger.info({ postId }, 'Downvoting Reddit post');
 
-  const submission = await redditClient.getSubmission(postId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const submission = await (redditClient.getSubmission(postId) as any);
   await (submission as unknown as { downvote: () => Promise<void> }).downvote();
 
   logger.info('Reddit post downvoted');

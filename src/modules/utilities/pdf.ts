@@ -43,13 +43,9 @@ export async function parsePdf(input: Buffer): Promise<PdfParseResult> {
   logger.info({ inputSize: input.length }, 'Parsing PDF');
 
   try {
-    const pdf = (pdfParse as { default: typeof pdfParse }).default || pdfParse;
-    const data = await (pdf as (buffer: Buffer) => Promise<{
-      numpages: number;
-      text: string;
-      info: Record<string, unknown>;
-      version: string;
-    }>)(input);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdf = ((pdfParse as any).default || pdfParse) as any;
+    const data = await pdf(input);
 
     logger.info(
       {
@@ -63,14 +59,14 @@ export async function parsePdf(input: Buffer): Promise<PdfParseResult> {
       text: data.text,
       numPages: data.numpages,
       metadata: {
-        title: data.info?.Title,
-        author: data.info?.Author,
-        subject: data.info?.Subject,
-        keywords: data.info?.Keywords,
-        creator: data.info?.Creator,
-        producer: data.info?.Producer,
-        creationDate: data.info?.CreationDate,
-        modificationDate: data.info?.ModDate,
+        title: data.info?.Title as string | undefined,
+        author: data.info?.Author as string | undefined,
+        subject: data.info?.Subject as string | undefined,
+        keywords: data.info?.Keywords as string | undefined,
+        creator: data.info?.Creator as string | undefined,
+        producer: data.info?.Producer as string | undefined,
+        creationDate: data.info?.CreationDate as Date | undefined,
+        modificationDate: data.info?.ModDate as Date | undefined,
       },
       version: data.version,
       info: data.info,
@@ -90,13 +86,9 @@ export async function extractText(input: Buffer): Promise<string> {
   logger.info('Extracting text from PDF');
 
   try {
-    const pdf = (pdfParse as { default: typeof pdfParse }).default || pdfParse;
-    const data = await (pdf as (buffer: Buffer) => Promise<{
-      numpages: number;
-      text: string;
-      info: Record<string, unknown>;
-      version: string;
-    }>)(input);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdf = ((pdfParse as any).default || pdfParse) as any;
+    const data = await pdf(input);
 
     logger.info({ textLength: data.text.length }, 'Text extracted from PDF');
 
@@ -116,25 +108,21 @@ export async function getMetadata(input: Buffer): Promise<PdfMetadata> {
   logger.info('Getting PDF metadata');
 
   try {
-    const pdf = (pdfParse as { default: typeof pdfParse }).default || pdfParse;
-    const data = await (pdf as (buffer: Buffer) => Promise<{
-      numpages: number;
-      text: string;
-      info: Record<string, unknown>;
-      version: string;
-    }>)(input);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdf = ((pdfParse as any).default || pdfParse) as any;
+    const data = await pdf(input);
 
     logger.info({ metadata: data.info }, 'PDF metadata retrieved');
 
     return {
-      title: data.info?.Title,
-      author: data.info?.Author,
-      subject: data.info?.Subject,
-      keywords: data.info?.Keywords,
-      creator: data.info?.Creator,
-      producer: data.info?.Producer,
-      creationDate: data.info?.CreationDate,
-      modificationDate: data.info?.ModDate,
+      title: data.info?.Title as string | undefined,
+      author: data.info?.Author as string | undefined,
+      subject: data.info?.Subject as string | undefined,
+      keywords: data.info?.Keywords as string | undefined,
+      creator: data.info?.Creator as string | undefined,
+      producer: data.info?.Producer as string | undefined,
+      creationDate: data.info?.CreationDate as Date | undefined,
+      modificationDate: data.info?.ModDate as Date | undefined,
     };
   } catch (error) {
     logger.error({ error }, 'Failed to get PDF metadata');
@@ -151,13 +139,9 @@ export async function getPageCount(input: Buffer): Promise<number> {
   logger.info('Getting PDF page count');
 
   try {
-    const pdf = (pdfParse as { default: typeof pdfParse }).default || pdfParse;
-    const data = await (pdf as (buffer: Buffer) => Promise<{
-      numpages: number;
-      text: string;
-      info: Record<string, unknown>;
-      version: string;
-    }>)(input);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdf = ((pdfParse as any).default || pdfParse) as any;
+    const data = await pdf(input);
 
     logger.info({ pageCount: data.numpages }, 'PDF page count retrieved');
 
@@ -185,13 +169,9 @@ export async function searchInPdf(
   logger.info({ searchText, caseSensitive }, 'Searching in PDF');
 
   try {
-    const pdf = (pdfParse as { default: typeof pdfParse }).default || pdfParse;
-    const data = await (pdf as (buffer: Buffer) => Promise<{
-      numpages: number;
-      text: string;
-      info: Record<string, unknown>;
-      version: string;
-    }>)(input);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdf = ((pdfParse as any).default || pdfParse) as any;
+    const data = await pdf(input);
     const text = data.text;
 
     let regex;
@@ -226,13 +206,9 @@ export async function extractTextByLine(input: Buffer): Promise<string[]> {
   logger.info('Extracting text by line from PDF');
 
   try {
-    const pdf = (pdfParse as { default: typeof pdfParse }).default || pdfParse;
-    const data = await (pdf as (buffer: Buffer) => Promise<{
-      numpages: number;
-      text: string;
-      info: Record<string, unknown>;
-      version: string;
-    }>)(input);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdf = ((pdfParse as any).default || pdfParse) as any;
+    const data = await pdf(input);
     const lines = data.text
       .split('\n')
       .map((line: string) => line.trim())
@@ -256,13 +232,9 @@ export async function extractTextByParagraph(input: Buffer): Promise<string[]> {
   logger.info('Extracting text by paragraph from PDF');
 
   try {
-    const pdf = (pdfParse as { default: typeof pdfParse }).default || pdfParse;
-    const data = await (pdf as (buffer: Buffer) => Promise<{
-      numpages: number;
-      text: string;
-      info: Record<string, unknown>;
-      version: string;
-    }>)(input);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdf = ((pdfParse as any).default || pdfParse) as any;
+    const data = await pdf(input);
     const paragraphs = data.text
       .split(/\n\n+/)
       .map((para: string) => para.trim())
@@ -286,13 +258,9 @@ export async function extractWords(input: Buffer): Promise<string[]> {
   logger.info('Extracting words from PDF');
 
   try {
-    const pdf = (pdfParse as { default: typeof pdfParse }).default || pdfParse;
-    const data = await (pdf as (buffer: Buffer) => Promise<{
-      numpages: number;
-      text: string;
-      info: Record<string, unknown>;
-      version: string;
-    }>)(input);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdf = ((pdfParse as any).default || pdfParse) as any;
+    const data = await pdf(input);
     const words = data.text
       .split(/\s+/)
       .map((word: string) => word.trim())
