@@ -25,6 +25,7 @@ export function ChatInterface({
   onFullscreenChange,
 }: ChatInterfaceProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [input, setInput] = useState('');
 
@@ -65,14 +66,31 @@ export function ChatInterface({
   const lastMessage = messages[messages.length - 1];
   const isLoading = (status === 'submitted' || status === 'streaming') && (lastMessage?.role as string) === 'user';
 
+  // Auto-focus input when component mounts
+  useEffect(() => {
+    // Small delay to ensure the dialog/modal is fully rendered
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Maintain focus on input when messages change (streaming responses)
+  useEffect(() => {
+    if (status === 'streaming' && inputRef.current && document.activeElement !== inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [messages, status]);
+
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!input || !input.trim()) return;
+
     sendMessage({ text: input });
     setInput(''); // Clear input after sending
   };
@@ -179,6 +197,7 @@ export function ChatInterface({
       <div className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
         <form onSubmit={handleFormSubmit} className="flex gap-3">
           <Textarea
+            ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
@@ -196,6 +215,10 @@ export function ChatInterface({
             size="icon"
             className="h-[60px] w-[60px] flex-shrink-0"
             disabled={isLoading || !input || !input.trim()}
+            onMouseDown={(e) => {
+              // Prevent button from taking focus when clicked
+              e.preventDefault();
+            }}
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

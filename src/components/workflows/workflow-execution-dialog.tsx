@@ -175,11 +175,13 @@ export function WorkflowExecutionDialog({
         <DialogContent
           className={
             triggerType === 'chat' && !isFullscreen
-              ? 'sm:max-w-4xl w-full h-[85vh] flex flex-col p-0'
+              ? 'sm:max-w-4xl w-full h-[85vh] flex flex-col p-0 border-0 gap-0 outline-0 ring-0'
               : isFullscreen
-                ? '!max-w-none w-screen h-screen flex flex-col p-0 rounded-none border-0'
+                ? '!max-w-none w-screen h-screen flex flex-col p-0 rounded-none border-0 gap-0 outline-0 ring-0'
                 : 'sm:max-w-md'
           }
+          onOpenAutoFocus={triggerType === 'chat' ? (e) => e.preventDefault() : undefined}
+          onPointerDownOutside={triggerType === 'chat' ? (e) => e.preventDefault() : undefined}
         >
           {triggerType === 'chat' && !isFullscreen ? (
             <DialogHeader>

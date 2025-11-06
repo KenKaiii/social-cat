@@ -24,6 +24,7 @@
     "db:push": "drizzle-kit push",
     "db:push:force": "drizzle-kit push --force",
     "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx scripts/seed-admin.ts",
     "railway:env": "bash scripts/export-railway-env.sh",
     "railway:sync": "bash scripts/sync-railway-vars.sh",
     "setup": "bash scripts/first-time-setup.sh",

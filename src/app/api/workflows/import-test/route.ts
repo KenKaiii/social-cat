@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { postgresDb } from '@/lib/db';
-import { workflowsTablePostgres, organizationsTablePostgres } from '@/lib/schema';
+import { workflowsTablePostgres } from '@/lib/schema';
 import { importWorkflow } from '@/lib/workflows/import-export';
 import { randomUUID } from 'crypto';
 import { logger } from '@/lib/logger';
-import { eq } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,22 +52,9 @@ export async function POST(request: NextRequest) {
       throw new Error('Database not initialized');
     }
 
-    // Create test organization if it doesn't exist
-    const testOrgId = 'test-org-1';
-    const existingOrg = await postgresDb
-      .select()
-      .from(organizationsTablePostgres)
-      .where(eq(organizationsTablePostgres.id, testOrgId))
-      .limit(1);
-
-    if (existingOrg.length === 0) {
-      await postgresDb.insert(organizationsTablePostgres).values({
-        id: testOrgId,
-        name: 'Test Organization',
-        slug: 'test-org',
-        ownerId: '1', // Test user owns the test organization
-      });
-    }
+    // Admin workflows have NULL organizationId (not tied to any client)
+    // These are global workflows available to all organizations
+    const targetOrgId = null;
 
     // Create workflow in database (use test user ID '1')
     const id = randomUUID();
@@ -76,7 +62,7 @@ export async function POST(request: NextRequest) {
     await postgresDb.insert(workflowsTablePostgres).values({
       id,
       userId: '1', // Test user
-      organizationId: testOrgId,
+      organizationId: targetOrgId,
       name: workflow.name,
       description: workflow.description,
       prompt: `Imported by LLM: ${workflow.name}`,

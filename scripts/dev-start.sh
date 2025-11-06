@@ -44,6 +44,10 @@ echo "💡 Tips:"
 echo "   - Run 'docker compose --profile debug up -d' to start pgAdmin & Redis Commander"
 echo "   - Run 'npm run db:studio' to open Drizzle Studio"
 echo ""
+echo "🌱 Seeding admin user..."
+npm run db:seed
+
+echo ""
 echo "🔧 Starting Next.js development server..."
 echo ""
 

@@ -3,11 +3,28 @@ name: workflow
 description: Generate and execute a custom workflow from natural language description
 ---
 
+## ⚠️ CRITICAL - READ FIRST BEFORE DOING ANYTHING ⚠️
+
+**BEFORE you search modules or write ANY code, answer these questions:**
+
+1. **What trigger type did the user request?**
+   - "chat", "chatbot", "agent" → `trigger.type = "chat"` + use `ai.ai-sdk.chat` module
+   - "schedule", "daily", "cron" → `trigger.type = "cron"`
+   - "webhook", "API" → `trigger.type = "webhook"`
+   - No mention → `trigger.type = "manual"`
+
+2. **Did you read the Chat Trigger Format section below?**
+   - If trigger is "chat", scroll to line 86 and read the EXACT format required
+   - Use `ai.ai-sdk.chat` NOT `generateText` for chat workflows
+
+3. **Did you include the `trigger` field at TOP LEVEL?**
+   - `trigger` is at the SAME LEVEL as `config`, NOT inside it
+
 ## Core Rules
 
 1. **MATCH USER REQUEST EXACTLY** - Don't simplify or remove features
 2. **DEBUG, DON'T SIMPLIFY** - Fix errors, never create "simpler versions"
-3. **PARSE TRIGGER TYPE** - If user says "chat trigger", "webhook", "cron", etc., include it in JSON
+3. **PARSE TRIGGER TYPE FIRST** - Read user request, identify trigger, THEN search modules
 
 ## Available Scripts
 
@@ -131,13 +148,31 @@ For chat-based workflows, use this EXACT structure:
 4. Pass messages as array with system + user roles
 5. Reference input via `{{trigger.userMessage}}` (or your chosen variable name)
 
-## Workflow Steps
+## Workflow Creation Checklist (Follow in Order!)
 
-1. **Search modules:** `npx tsx scripts/search-modules.ts "keyword"`
-2. **Write JSON:** Save to `/tmp/workflow.json` via bash `cat > /tmp/workflow.json << 'EOF'`
-3. **Validate:** `npx tsx scripts/validate-workflow.ts /tmp/workflow.json`
-4. **Test:** `npx tsx scripts/test-workflow.ts /tmp/workflow.json`
-5. **Import:** `npx tsx scripts/import-workflow.ts /tmp/workflow.json`
+**Step 0: Parse User Request**
+- [ ] Identify trigger type from user's words ("chat", "schedule", "webhook", etc.)
+- [ ] If "chat" trigger: Plan to use `ai.ai-sdk.chat` NOT `generateText`
+- [ ] If "chat" trigger: Read lines 86-133 for EXACT format before continuing
+
+**Step 1: Search Modules**
+- [ ] `npx tsx scripts/search-modules.ts "keyword"`
+- [ ] Verify module paths are lowercase: `ai.ai-sdk.chat`
+
+**Step 2: Write JSON**
+- [ ] Include `trigger` field at TOP LEVEL (same level as `config`)
+- [ ] If chat: Include `trigger.config.inputVariable = "userMessage"`
+- [ ] If chat: Use `ai.ai-sdk.chat` with messages array format
+- [ ] Save to `/tmp/workflow.json` via bash `cat > /tmp/workflow.json << 'EOF'`
+
+**Step 3: Validate**
+- [ ] `npx tsx scripts/validate-workflow.ts /tmp/workflow.json`
+
+**Step 4: Test**
+- [ ] `npx tsx scripts/test-workflow.ts /tmp/workflow.json`
+
+**Step 5: Import**
+- [ ] `npx tsx scripts/import-workflow.ts /tmp/workflow.json`
 
 ## Error Handling
 
