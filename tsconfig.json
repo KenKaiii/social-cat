@@ -23,5 +23,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "src/modules/social/reddit.ts", "src/modules/utilities/pdf.ts"]
+  "exclude": ["node_modules", "src/modules/social/reddit.ts", "src/modules/utilities/pdf.ts", "tests/templates/**/*.ts"]
 }

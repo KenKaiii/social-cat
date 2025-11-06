@@ -3,7 +3,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
-import { moduleRegistry } from './module-registry';
+import { generateModuleDocs, validateModuleFunction } from './module-registry';
 
 /**
  * LLM Workflow Generator
@@ -55,40 +55,6 @@ const workflowSchema = z.object({
 export type GeneratedWorkflow = z.infer<typeof workflowSchema>;
 
 /**
- * Generate module registry documentation for LLM context
- */
-function getModuleRegistryPrompt(): string {
-  const categories = Object.keys(moduleRegistry);
-
-  let prompt = '# Available Modules\n\n';
-  prompt += 'Use these modules in the format: category.module.function\n\n';
-
-  for (const category of categories) {
-    prompt += `## ${category}\n\n`;
-    const modules = Object.keys(moduleRegistry[category]);
-
-    for (const moduleName of modules) {
-      const funcs = moduleRegistry[category][moduleName];
-      prompt += `### ${category}.${moduleName}\n`;
-
-      const funcNames = Object.keys(funcs);
-      for (const funcName of funcNames) {
-        const func = funcs[funcName];
-        // Get parameter info from function
-        prompt += `- **${category}.${moduleName}.${funcName}**`;
-        if (func.description) {
-          prompt += `: ${func.description}`;
-        }
-        prompt += '\n';
-      }
-      prompt += '\n';
-    }
-  }
-
-  return prompt;
-}
-
-/**
  * Generate a workflow from natural language description
  */
 export async function generateWorkflowFromPrompt(
@@ -102,7 +68,7 @@ export async function generateWorkflowFromPrompt(
 
   try {
     // Get module registry
-    const moduleRegistry = getModuleRegistryPrompt();
+    const moduleRegistry = generateModuleDocs();
 
     // Build system prompt
     const systemPrompt = `You are an expert workflow automation specialist. Your job is to generate executable workflow configurations from natural language descriptions.
@@ -225,26 +191,9 @@ export function validateWorkflow(workflow: GeneratedWorkflow): {
 
   // Check each step
   for (const step of workflow.config.steps) {
-    const [category, moduleName, functionName] = step.module.split('.');
-
-    if (!category || !moduleName || !functionName) {
-      errors.push(`Step "${step.name}": Invalid module path format: ${step.module}`);
-      continue;
-    }
-
-    // Check if module exists
-    if (!moduleRegistry[category]) {
-      errors.push(`Step "${step.name}": Unknown category: ${category}`);
-      continue;
-    }
-
-    if (!moduleRegistry[category][moduleName]) {
-      errors.push(`Step "${step.name}": Unknown module: ${category}.${moduleName}`);
-      continue;
-    }
-
-    if (!moduleRegistry[category][moduleName][functionName]) {
-      errors.push(`Step "${step.name}": Unknown function: ${step.module}`);
+    // Validate module function exists
+    if (!validateModuleFunction(step.module)) {
+      errors.push(`Step "${step.name}": Invalid or unknown module: ${step.module}`);
       continue;
     }
 
