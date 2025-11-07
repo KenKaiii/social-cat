@@ -73,13 +73,13 @@ export function CredentialCard({ credential, onDeleted }: CredentialCardProps) {
           <CardTitle className="card-title">{credential.platform}</CardTitle>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-sm"
             onClick={handleDelete}
             disabled={deleting}
-            className="h-8 w-8 hover:bg-red-100 dark:hover:bg-red-900/30"
+            className="hover:text-destructive"
             title="Delete credential"
           >
-            <Trash2 className="h-4 w-4 text-muted-foreground hover:text-red-600 dark:hover:text-red-400 transition-colors" />
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </CardHeader>

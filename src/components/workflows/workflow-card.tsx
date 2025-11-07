@@ -193,10 +193,16 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
   const TriggerIcon = getTriggerIcon();
   const RunIcon = runButtonConfig.icon;
 
+  const isActive = (optimisticStatus || workflow.status) === 'active';
+
   return (
     <Card className="group relative overflow-hidden rounded-lg border-0 bg-gradient-to-br from-primary/5 via-blue-500/3 to-primary/5 backdrop-blur-sm shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-      {/* Gradient top border */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-blue-400 to-primary opacity-80" />
+      {/* Gradient top border - green when active, blue when inactive */}
+      <div className={`absolute top-0 left-0 w-full h-1 transition-all duration-300 ${
+        isActive
+          ? 'bg-gradient-to-r from-green-500 via-emerald-400 to-green-500 opacity-90'
+          : 'bg-gradient-to-r from-primary via-blue-400 to-primary opacity-80'
+      }`} />
       <CardHeader className="space-y-2 pt-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">

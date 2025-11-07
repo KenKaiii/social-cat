@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,13 +14,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Building2, Plus, Trash2, Pencil, UserPlus } from 'lucide-react';
+import { Building2, Plus, Trash2, Pencil, UserPlus, Users, CheckCircle2, Search } from 'lucide-react';
 import { useClient, type Client } from '@/components/providers/ClientProvider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { ClientMembersDialog } from '@/components/clients/client-members-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const getStatusBadgeVariant = (status: string): 'gradient-success' | 'outline' => {
   return status === 'active' ? 'gradient-success' : 'outline';
@@ -38,6 +39,8 @@ export default function ClientsPage() {
   const [togglingStatus, setTogglingStatus] = useState<Record<string, boolean>>({});
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const handleCreateClient = async () => {
     if (!newClientName.trim()) {
@@ -165,77 +168,275 @@ export default function ClientsPage() {
     });
   };
 
+  // Filter clients
+  const filteredClients = useMemo(() => {
+    return clients.filter((client) => {
+      // Search filter
+      const matchesSearch =
+        searchQuery === '' ||
+        client.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Status filter
+      const clientStatus = client.status || 'active';
+      const matchesStatus = statusFilter === 'all' || clientStatus === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [clients, searchQuery, statusFilter]);
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    const total = clients.length;
+    const active = clients.filter((c) => (c.status || 'active') === 'active').length;
+    const totalMembers = clients.reduce((sum, c) => sum + (c.memberCount || 1), 0);
+
+    return { total, active, totalMembers };
+  }, [clients]);
+
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="page-title text-gray-1000">Clients</h1>
-            <p className="page-description text-gray-700 mt-1">
-              Manage your client organizations and access
-            </p>
+        {/* Stats Cards */}
+        {!isLoading && clients.length > 0 && (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {/* Total Clients */}
+            <Card className="relative overflow-hidden rounded-lg border-0 bg-gradient-to-br from-primary/5 via-blue-500/3 to-primary/5 backdrop-blur-sm shadow-sm hover:shadow-lg transition-all duration-300">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-blue-400 to-primary opacity-80" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-4">
+                <CardTitle className="text-sm font-medium">Total Clients</CardTitle>
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-400 to-cyan-500">
+                  <Building2 className="h-3 w-3 text-white" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats.active} active
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Active Clients */}
+            <Card className="relative overflow-hidden rounded-lg border-0 bg-gradient-to-br from-green-500/30 via-emerald-500/20 to-green-600/30 backdrop-blur-sm shadow-sm hover:shadow-lg transition-all duration-300">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 via-emerald-400 to-green-500" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-4">
+                <CardTitle className="text-sm font-medium">Active Clients</CardTitle>
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-green-400 to-emerald-500">
+                  <CheckCircle2 className="h-3 w-3 text-white" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.active}</div>
+                <p className="text-xs text-muted-foreground">
+                  currently active
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Total Members */}
+            <Card className="relative overflow-hidden rounded-lg border-0 bg-gradient-to-br from-purple-500/30 via-violet-500/20 to-purple-600/30 backdrop-blur-sm shadow-sm hover:shadow-lg transition-all duration-300">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-violet-400 to-purple-500" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-4">
+                <CardTitle className="text-sm font-medium">Total Members</CardTitle>
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-400 to-violet-500">
+                  <Users className="h-3 w-3 text-white" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalMembers}</div>
+                <p className="text-xs text-muted-foreground">
+                  across all clients
+                </p>
+              </CardContent>
+            </Card>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 group">
-                <Plus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:rotate-90" />
-                Add Client
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Create New Client</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">
-                    Client Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={newClientName}
-                    onChange={(e) => setNewClientName(e.target.value)}
-                    placeholder="Acme Corp"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleCreateClient();
-                      }
-                    }}
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsAddDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCreateClient}
-                    disabled={isCreating}
-                  >
-                    {isCreating ? 'Creating...' : 'Create Client'}
-                  </Button>
-                </div>
+        )}
+
+        {/* Search and Filters */}
+        {!isLoading && clients.length > 0 && (
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex flex-1 gap-4 w-full sm:w-auto">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Filter clients..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8"
+                />
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 group">
+                  <Plus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:rotate-90" />
+                  Add Client
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Create New Client</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">
+                      Client Name
+                    </Label>
+                    <Input
+                      id="name"
+                      value={newClientName}
+                      onChange={(e) => setNewClientName(e.target.value)}
+                      placeholder="Acme Corp"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleCreateClient();
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsAddDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleCreateClient}
+                      disabled={isCreating}
+                    >
+                      {isCreating ? 'Creating...' : 'Create Client'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+
+        {/* Add Client Button (when no clients) */}
+        {!isLoading && clients.length === 0 && (
+          <div className="flex justify-end">
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 group">
+                  <Plus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:rotate-90" />
+                  Add Client
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Create New Client</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">
+                      Client Name
+                    </Label>
+                    <Input
+                      id="name"
+                      value={newClientName}
+                      onChange={(e) => setNewClientName(e.target.value)}
+                      placeholder="Acme Corp"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleCreateClient();
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsAddDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleCreateClient}
+                      disabled={isCreating}
+                    >
+                      {isCreating ? 'Creating...' : 'Create Client'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
 
         {/* Loading State */}
         {isLoading && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-32" />
-            ))}
+          <div className="space-y-6">
+            {/* Stats Cards Skeleton */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={`stat-${i}`}
+                  className="rounded-lg border border-border/50 bg-surface/80 backdrop-blur-sm shadow-sm p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-4 rounded" />
+                  </div>
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              ))}
+            </div>
+
+            {/* Search and Filters Skeleton */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex flex-1 gap-4 w-full sm:w-auto">
+                <Skeleton className="h-10 flex-1 max-w-sm" />
+                <Skeleton className="h-10 w-[140px]" />
+              </div>
+              <Skeleton className="h-10 w-32" />
+            </div>
+
+            {/* Client Cards Skeleton */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={`client-${i}`}
+                  className="rounded-lg border border-border/50 bg-surface/80 backdrop-blur-sm shadow-sm p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <Skeleton className="h-5 w-3/4" />
+                    <div className="flex gap-1">
+                      <Skeleton className="h-8 w-8 rounded-md" />
+                      <Skeleton className="h-8 w-8 rounded-md" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {/* Clients Grid */}
         {!isLoading && clients.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {clients.map((client) => {
+            {filteredClients.map((client) => {
               const clientId = client.id;
               const clientStatus = client.status || 'active';
               const isActive = clientStatus === 'active';
@@ -245,8 +446,12 @@ export default function ClientsPage() {
               key={`client-${clientId}`}
               className="group relative overflow-hidden rounded-lg border-0 bg-gradient-to-br from-primary/5 via-blue-500/3 to-primary/5 backdrop-blur-sm shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
             >
-              {/* Gradient top border */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-blue-400 to-primary opacity-80" />
+              {/* Gradient top border - green when active, blue when inactive */}
+              <div className={`absolute top-0 left-0 w-full h-1 transition-all duration-300 ${
+                isActive
+                  ? 'bg-gradient-to-r from-green-500 via-emerald-400 to-green-500 opacity-90'
+                  : 'bg-gradient-to-r from-primary via-blue-400 to-primary opacity-80'
+              }`} />
               <CardHeader className="space-y-2 pt-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">

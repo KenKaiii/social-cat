@@ -58,9 +58,9 @@ export default function CredentialsPage() {
         <div className="flex justify-end">
           <Button
             onClick={() => setShowAddDialog(true)}
-            className="bg-foreground text-background hover:bg-foreground/90 transition-colors"
+            className="bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 group"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:rotate-90" />
             Add Credential
           </Button>
         </div>
