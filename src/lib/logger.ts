@@ -58,43 +58,46 @@ const createFileStream = (filePath: string) => {
   }
 };
 
-// Create multiple streams (console + files)
+// Create multiple streams (console + files) - only in Node.js runtime
 const streams: pino.StreamEntry[] = [];
 
-// Always log to console in development
-if (isDevelopment) {
-  streams.push({
-    level: 'debug',
-    stream: process.stdout,
-  });
-}
+// Only configure streams in Node.js runtime (not in Edge)
+if (isNodeRuntime) {
+  // Always log to console in development
+  if (isDevelopment) {
+    streams.push({
+      level: 'debug',
+      stream: process.stdout,
+    });
+  }
 
-// Add file streams if enabled (only in Node.js runtime)
-if (enableFileLogs && typeof window === 'undefined' && isNodeRuntime && logFilePath && errorLogFilePath) {
-  const appStream = createFileStream(logFilePath);
-  const errorStream = createFileStream(errorLogFilePath);
+  // Add file streams if enabled (only in Node.js runtime)
+  if (enableFileLogs && typeof window === 'undefined' && logFilePath && errorLogFilePath) {
+    const appStream = createFileStream(logFilePath);
+    const errorStream = createFileStream(errorLogFilePath);
 
-  if (appStream) {
+    if (appStream) {
+      streams.push({
+        level: 'info',
+        stream: appStream,
+      });
+    }
+
+    if (errorStream) {
+      streams.push({
+        level: 'error',
+        stream: errorStream,
+      });
+    }
+  }
+
+  // Fallback to stdout if no streams configured (Node.js only)
+  if (streams.length === 0) {
     streams.push({
       level: 'info',
-      stream: appStream,
+      stream: process.stdout,
     });
   }
-
-  if (errorStream) {
-    streams.push({
-      level: 'error',
-      stream: errorStream,
-    });
-  }
-}
-
-// Fallback to stdout if no streams configured
-if (streams.length === 0) {
-  streams.push({
-    level: 'info',
-    stream: process.stdout,
-  });
 }
 
 // Create logger with multiple streams (or single stream for Edge runtime)

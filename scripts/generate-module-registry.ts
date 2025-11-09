@@ -41,7 +41,8 @@ interface ModuleInfo {
 /**
  * Extract JSDoc comment from a node
  */
-function getJSDocDescription(node: ts.Node, sourceFile: ts.SourceFile): string {
+function getJSDocDescription(node: ts.Node): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const jsDoc = (node as any).jsDoc;
   if (!jsDoc || jsDoc.length === 0) return '';
 
@@ -57,6 +58,7 @@ function getJSDocDescription(node: ts.Node, sourceFile: ts.SourceFile): string {
  * Extract example from JSDoc
  */
 function getJSDocExample(node: ts.Node): string | undefined {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const jsDoc = (node as any).jsDoc;
   if (!jsDoc || jsDoc.length === 0) return undefined;
 
@@ -248,12 +250,12 @@ function formatRegistry(registry: Map<string, ModuleInfo[]>): string {
     output += `      name: '${displayName}',\n`;
     output += `      modules: [\n`;
 
-    for (const module of modules) {
+    for (const mod of modules) {
       output += `        {\n`;
-      output += `          name: '${module.name}',\n`;
+      output += `          name: '${mod.name}',\n`;
       output += `          functions: [\n`;
 
-      for (const func of module.functions) {
+      for (const func of mod.functions) {
         output += `            {\n`;
         output += `              name: '${func.name}',\n`;
         output += `              description: ${JSON.stringify(func.description)},\n`;

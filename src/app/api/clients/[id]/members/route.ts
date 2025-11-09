@@ -4,7 +4,7 @@ import { getOrganizationMembers, getUserRoleInOrganization } from '@/lib/organiz
 import { logger } from '@/lib/logger';
 import { db } from '@/lib/db';
 import { accountsTable, invitationsTable } from '@/lib/schema';
-import { eq, inArray } from 'drizzle-orm';
+import { inArray } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 /**

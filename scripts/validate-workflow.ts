@@ -85,17 +85,17 @@ async function validateModuleFunctions(workflow: WorkflowExport): Promise<string
       const modulePath = `../src/modules/${category}/${moduleName}`;
 
       // Dynamically import the module
-      const module = await import(modulePath);
+      const mod = await import(modulePath);
 
       // Check if function exists
-      if (typeof module[functionName] !== 'function') {
+      if (typeof mod[functionName] !== 'function') {
         errors.push(
           `Step "${step.id}": Function "${functionName}" not found in module ${category}/${moduleName}`
         );
 
         // Show available functions
-        const availableFunctions = Object.keys(module).filter(
-          key => typeof module[key] === 'function'
+        const availableFunctions = Object.keys(mod).filter(
+          key => typeof mod[key] === 'function'
         );
         if (availableFunctions.length > 0) {
           errors.push(
@@ -103,6 +103,7 @@ async function validateModuleFunctions(workflow: WorkflowExport): Promise<string
           );
         }
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // Module doesn't exist
       errors.push(
