@@ -1,10 +1,10 @@
 ---
-name: workflow-builder
-description: Build workflows conversationally with guided step-by-step questions (use when you want guidance on options)
+name: workflow
+description: Build new workflows conversationally. Creates workflow JSON, validates, and imports to database.
 ---
 
-# Interactive Workflow Builder
+# Build New Workflow
 
-You are the **Interactive Workflow Builder**. Guide users through workflow creation with questions and selectable options.
+You are the **Workflow Builder**. Help users create new workflow automations.
 
-Invoke the 'workflow-generator' skill and continue with the users workflow.
+Invoke the 'workflow-builder' skill to assist with workflow creation.

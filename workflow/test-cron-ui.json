@@ -1,0 +1,33 @@
+{
+  "version": "1.0",
+  "name": "Test Cron UI",
+  "description": "Simple workflow to test the cron trigger UI dropdown",
+  "trigger": {
+    "type": "cron",
+    "config": {
+      "schedule": "0 9 * * *"
+    }
+  },
+  "config": {
+    "steps": [
+      {
+        "id": "getMessage",
+        "module": "utilities.javascript.execute",
+        "inputs": {
+          "options": {
+            "code": "return `Workflow ran at ${new Date().toISOString()}`",
+            "context": {}
+          }
+        },
+        "outputAs": "message"
+      }
+    ],
+    "returnValue": "{{message}}",
+    "outputDisplay": {
+      "type": "text"
+    }
+  },
+  "metadata": {
+    "requiresCredentials": []
+  }
+}
