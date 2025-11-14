@@ -4,17 +4,19 @@
  * Data Modules
  *
  * Work with databases, spreadsheets, and data storage
- * - Google Sheets
- * - Notion
  * - Airtable
+ * - Algolia
+ * - Gamma
  * - Google Analytics
  * - Google Drive
- * - Algolia
+ * - Google Sheets
+ * - Notion
  */
 
-export * from './google-sheets';
-export * from './notion';
 export * from './airtable';
+export * from './algolia';
+export * from './gamma';
 export * from './google-analytics';
 export * from './google-drive';
-export * from './algolia';
+export * from './google-sheets';
+export * from './notion';

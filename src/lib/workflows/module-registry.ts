@@ -2341,6 +2341,29 @@ export function getModuleRegistry(): ModuleCategory[] {
           ],
         },
         {
+          name: 'gamma',
+          functions: [
+            {
+              name: 'generateGamma',
+              description: "Generate a new Gamma presentation, document, webpage, or social post",
+              signature: 'generateGamma(options)',
+              example: "const generation = await generateGamma({\n  inputText: '# My Presentation\\n\\n## Slide 1\\nContent here',\n  format: 'presentation',\n  numCards: 10,\n  textOptions: { amount: 'medium', language: 'en' }\n});\nconsole.log('Generation ID:', generation.generationId);",
+            },
+            {
+              name: 'getGenerationStatus',
+              description: "Check the status of a Gamma generation",
+              signature: 'getGenerationStatus(options)',
+              example: "const status = await getGenerationStatus({\n  generationId: 'gen_abc123'\n});\nif (status.status === 'completed') {\n  console.log('Gamma URL:', status.gammaUrl);\n}",
+            },
+            {
+              name: 'waitForCompletion',
+              description: "Wait for a Gamma generation to complete",
+              signature: 'waitForCompletion(options)',
+              example: "const generation = await generateGamma({ inputText: '...' });\nconst completed = await waitForCompletion({\n  generationId: generation.generationId,\n  maxRetries: 60,  // 5 minutes max\n  retryDelayMs: 5000  // Check every 5 seconds\n});\nconsole.log('View your gamma:', completed.gammaUrl);",
+            },
+          ],
+        },
+        {
           name: 'google-analytics',
           functions: [
             {
