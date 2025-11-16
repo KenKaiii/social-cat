@@ -124,8 +124,8 @@ export default function DashboardPage() {
 
     fetchStats();
 
-    // Refresh stats every 30 seconds
-    const interval = setInterval(fetchStats, 30000);
+    // Refresh stats every 60 seconds
+    const interval = setInterval(fetchStats, 60000);
     return () => clearInterval(interval);
   }, [currentClient]);
 
@@ -152,8 +152,8 @@ export default function DashboardPage() {
 
     fetchLogs();
 
-    // Refresh logs every 30 seconds
-    const interval = setInterval(fetchLogs, 30000);
+    // Refresh logs every 60 seconds
+    const interval = setInterval(fetchLogs, 60000);
     return () => clearInterval(interval);
   }, [currentClient]);
 

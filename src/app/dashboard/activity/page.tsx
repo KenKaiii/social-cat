@@ -215,11 +215,11 @@ export default function ActivityPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentClient]);
 
-  // Auto-refresh every 10 seconds
+  // Auto-refresh every 60 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       fetchLogs();
-    }, 10000);
+    }, 60000);
 
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps

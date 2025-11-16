@@ -58,13 +58,13 @@ export default function WorkflowsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentClient]);
 
-  // Poll for new workflows every 3 seconds when page is visible
+  // Poll for new workflows every 60 seconds when page is visible
   useEffect(() => {
     const interval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         fetchWorkflows();
       }
-    }, 3000);
+    }, 60000);
 
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps

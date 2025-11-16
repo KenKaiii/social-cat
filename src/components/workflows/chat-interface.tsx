@@ -11,6 +11,11 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
+// Animation constants to avoid creating new objects on each render
+const MESSAGE_ANIMATION_INITIAL = { opacity: 0, y: 10 };
+const MESSAGE_ANIMATION_ANIMATE = { opacity: 1, y: 0 };
+const MESSAGE_ANIMATION_TRANSITION = { duration: 0.3, ease: 'easeOut' as const };
+
 interface ChatInterfaceProps {
   workflowId: string;
   workflowName: string;
@@ -194,9 +199,9 @@ export function ChatInterface({
           {messages.map((message, index) => (
             <motion.div
               key={`${message.id}-${index}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
+              initial={MESSAGE_ANIMATION_INITIAL}
+              animate={MESSAGE_ANIMATION_ANIMATE}
+              transition={MESSAGE_ANIMATION_TRANSITION}
               className={cn(
                 'flex gap-4',
                 (message.role as string) === 'user' ? 'justify-end' : 'justify-start'
@@ -241,8 +246,8 @@ export function ChatInterface({
         {/* Loading indicator */}
         {isLoading && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={MESSAGE_ANIMATION_INITIAL}
+            animate={MESSAGE_ANIMATION_ANIMATE}
             className="flex gap-4"
           >
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary via-blue-500 to-primary flex items-center justify-center shadow-sm">

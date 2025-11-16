@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +24,7 @@ interface WorkflowCardProps {
   onUpdated?: () => void;
 }
 
-export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: WorkflowCardProps) {
+export const WorkflowCard = memo(function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: WorkflowCardProps) {
   const [deleting, setDeleting] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [optimisticStatus, setOptimisticStatus] = useState<string | null>(null);
@@ -37,21 +37,7 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
   const [editDescription, setEditDescription] = useState(workflow.description || '');
   const [saving, setSaving] = useState(false);
 
-  const handleDelete = async () => {
-    toast(`Delete "${workflow.name}"?`, {
-      description: 'This cannot be undone.',
-      action: {
-        label: 'Delete',
-        onClick: () => performDelete(),
-      },
-      cancel: {
-        label: 'Cancel',
-        onClick: () => {},
-      },
-    });
-  };
-
-  const performDelete = async () => {
+  const performDelete = useCallback(async () => {
     setDeleting(true);
     try {
       const response = await fetch(`/api/workflows/${workflow.id}`, {
@@ -70,9 +56,23 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
     } finally {
       setDeleting(false);
     }
-  };
+  }, [workflow.id, onDeleted]);
 
-  const handleToggleStatus = async (checked: boolean) => {
+  const handleDelete = useCallback(async () => {
+    toast(`Delete "${workflow.name}"?`, {
+      description: 'This cannot be undone.',
+      action: {
+        label: 'Delete',
+        onClick: () => performDelete(),
+      },
+      cancel: {
+        label: 'Cancel',
+        onClick: () => {},
+      },
+    });
+  }, [workflow.name, performDelete]);
+
+  const handleToggleStatus = useCallback(async (checked: boolean) => {
     const newStatus = checked ? 'active' : 'draft';
     setToggling(true);
     setOptimisticStatus(newStatus);
@@ -97,14 +97,39 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
     } finally {
       setToggling(false);
     }
-  };
+  }, [workflow.id, onUpdated]);
 
-  const handleRunClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleRunClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.blur();
     setExecutionDialogOpen(true);
-  };
+  }, []);
 
-  const handleSaveEdit = async () => {
+  const handleEditClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.blur();
+    setEditDialogOpen(true);
+  }, []);
+
+  const handleExportClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.blur();
+    onExport(workflow.id);
+  }, [onExport, workflow.id]);
+
+  const handleSettingsClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.blur();
+    setSettingsDialogOpen(true);
+  }, []);
+
+  const handleCredentialsClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.blur();
+    setCredentialsConfigOpen(true);
+  }, []);
+
+  const handleOutputsClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.blur();
+    setOutputsDialogOpen(true);
+  }, []);
+
+  const handleSaveEdit = useCallback(async () => {
     if (!editName.trim()) {
       toast.error('Workflow name is required');
       return;
@@ -134,7 +159,7 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
     } finally {
       setSaving(false);
     }
-  };
+  }, [workflow.id, editName, editDescription, onUpdated]);
 
   const getStatusBadgeVariant = (status: string): 'gradient-success' | 'gradient-warning' | 'gradient-error' | 'outline' => {
     switch (status) {
@@ -162,7 +187,7 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
     });
   };
 
-  const getTriggerIcon = () => {
+  const TriggerIcon = useMemo(() => {
     switch (workflow.trigger.type) {
       case 'chat':
         return MessageSquare;
@@ -181,9 +206,9 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
       default:
         return Play;
     }
-  };
+  }, [workflow.trigger.type]);
 
-  const runButtonConfig = (() => {
+  const runButtonConfig = useMemo(() => {
     switch (workflow.trigger.type) {
       case 'chat':
         return { label: 'Chat', icon: MessageSquare };
@@ -204,9 +229,8 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
       default:
         return { label: 'Run', icon: Play };
     }
-  })();
+  }, [workflow.trigger.type]);
 
-  const TriggerIcon = getTriggerIcon();
   const RunIcon = runButtonConfig.icon;
 
   const isActive = (optimisticStatus || workflow.status) === 'active';
@@ -247,7 +271,7 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
             <Button
               variant="ghost"
               size="icon-sm"
-              onClick={(e) => { e.currentTarget.blur(); setEditDialogOpen(true); }}
+              onClick={handleEditClick}
               title="Edit workflow"
             >
               <Pencil className="h-4 w-4" />
@@ -255,7 +279,7 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
             <Button
               variant="ghost"
               size="icon-sm"
-              onClick={(e) => { e.currentTarget.blur(); onExport(workflow.id); }}
+              onClick={handleExportClick}
               title="Export workflow"
             >
               <Download className="h-4 w-4" />
@@ -310,7 +334,7 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
           <Button
             variant="ghost"
             size="sm"
-            onClick={(e) => { e.currentTarget.blur(); setSettingsDialogOpen(true); }}
+            onClick={handleSettingsClick}
             className="h-7 px-2 transition-all duration-200 hover:scale-105 active:scale-95 group"
             title="Configure workflow settings"
           >
@@ -320,7 +344,7 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
           <Button
             variant="ghost"
             size="sm"
-            onClick={(e) => { e.currentTarget.blur(); setCredentialsConfigOpen(true); }}
+            onClick={handleCredentialsClick}
             className="h-7 px-2 transition-all duration-200 hover:scale-105 active:scale-95 group"
             title="Configure credentials"
           >
@@ -330,7 +354,7 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
           <Button
             variant="ghost"
             size="sm"
-            onClick={(e) => { e.currentTarget.blur(); setOutputsDialogOpen(true); }}
+            onClick={handleOutputsClick}
             className="h-7 px-2 transition-all duration-200 hover:scale-105 active:scale-95 group"
             title="View workflow execution history"
           >
@@ -425,4 +449,4 @@ export function WorkflowCard({ workflow, onDeleted, onExport, onUpdated }: Workf
       </Dialog>
     </Card>
   );
-}
+});

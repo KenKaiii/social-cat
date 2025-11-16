@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState, memo } from 'react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import React, { useState, memo, useEffect } from 'react';
+import type { Prism as SyntaxHighlighterType } from 'react-syntax-highlighter';
+import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 import { toast } from 'sonner';
+
+let SyntaxHighlighterComponent: typeof SyntaxHighlighterType | null = null;
+let vscDarkPlusTheme: SyntaxHighlighterProps['style'] | null = null;
 
 interface CodeBlockWithCopyProps {
   code: string;
@@ -12,6 +15,23 @@ interface CodeBlockWithCopyProps {
 
 const CodeBlockWithCopyComponent = ({ code, language }: CodeBlockWithCopyProps) => {
   const [copied, setCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load syntax highlighter dynamically
+  useEffect(() => {
+    if (!SyntaxHighlighterComponent || !vscDarkPlusTheme) {
+      Promise.all([
+        import('react-syntax-highlighter').then(mod => mod.Prism),
+        import('react-syntax-highlighter/dist/esm/styles/prism/vsc-dark-plus')
+      ]).then(([SyntaxHighlighter, theme]) => {
+        SyntaxHighlighterComponent = SyntaxHighlighter as typeof SyntaxHighlighterType;
+        vscDarkPlusTheme = theme.default;
+        setIsLoading(false);
+      });
+    } else {
+      setIsLoading(false);
+    }
+  }, []);
 
   const handleCopy = async () => {
     try {
@@ -52,18 +72,28 @@ const CodeBlockWithCopyComponent = ({ code, language }: CodeBlockWithCopyProps) 
       </div>
 
       {/* Code content */}
-      <SyntaxHighlighter
-        style={vscDarkPlus}
-        language={language || 'text'}
-        PreTag="div"
-        customStyle={{
-          margin: 0,
-          borderRadius: 0,
-          background: 'transparent',
-        }}
-      >
-        {code}
-      </SyntaxHighlighter>
+      {isLoading ? (
+        <div className="p-4 animate-pulse">
+          <pre className="text-sm text-muted-foreground font-mono">{code}</pre>
+        </div>
+      ) : SyntaxHighlighterComponent ? (
+        <SyntaxHighlighterComponent
+          style={vscDarkPlusTheme || undefined}
+          language={language || 'text'}
+          PreTag="div"
+          customStyle={{
+            margin: 0,
+            borderRadius: 0,
+            background: 'transparent',
+          }}
+        >
+          {code}
+        </SyntaxHighlighterComponent>
+      ) : (
+        <div className="p-4">
+          <pre className="text-sm text-foreground font-mono">{code}</pre>
+        </div>
+      )}
     </div>
   );
 }

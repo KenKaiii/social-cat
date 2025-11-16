@@ -12,8 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import * as Icons from 'lucide-react';
 import { toast } from 'sonner';
+import { getIcon } from '@/lib/icon-map';
 
 interface OAuthAccount {
   id: string;
@@ -175,7 +175,7 @@ export function WorkflowCredentialsStatus({ workflowId }: WorkflowCredentialsSta
       <div className="text-xs font-medium text-muted-foreground">Required Credentials:</div>
       <div className="space-y-1.5">
         {credentials.map((cred) => {
-          const IconComponent = (Icons as unknown as Record<string, typeof Key>)[cred.icon] || Key;
+          const IconComponent = getIcon(cred.icon);
 
           // 'both' or 'optional' type - show both OAuth and API key options
           if ((cred.type === 'both' || cred.type === 'optional') && (cred.accounts.length > 0 || cred.keys.length > 0)) {
