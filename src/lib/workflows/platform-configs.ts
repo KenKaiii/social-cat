@@ -58,6 +58,22 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     ]
   },
 
+  openrouter: {
+    id: 'openrouter',
+    name: 'OpenRouter',
+    category: 'AI',
+    fields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+        placeholder: 'sk-or-v1-...',
+        description: 'Your OpenRouter API key from openrouter.ai/keys - Access 300+ AI models from one API'
+      }
+    ]
+  },
+
   cohere: {
     id: 'cohere',
     name: 'Cohere',

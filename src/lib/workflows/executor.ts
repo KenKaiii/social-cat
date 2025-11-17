@@ -492,13 +492,30 @@ async function executeModuleFunction(
       // Only inject if apiKey is not already provided
       if (!options.apiKey) {
         const model = options.model as string | undefined;
+        const provider = options.provider as string | undefined;
 
-        // Detect provider from model name
+        // Determine credential key based on explicit provider or model name
         let credentialKey: string | undefined;
-        if (model?.startsWith('gpt-')) {
-          credentialKey = 'openai_api_key';
-        } else if (model?.startsWith('claude-')) {
-          credentialKey = 'anthropic_api_key';
+
+        if (provider) {
+          // Use explicit provider if set (from workflow settings)
+          if (provider === 'openai') {
+            credentialKey = 'openai_api_key';
+          } else if (provider === 'anthropic') {
+            credentialKey = 'anthropic_api_key';
+          } else if (provider === 'openrouter') {
+            credentialKey = 'openrouter_api_key';
+          }
+        } else if (model) {
+          // Fall back to detecting from model name
+          if (model.startsWith('gpt-') || model.startsWith('o1') || model.startsWith('o3')) {
+            credentialKey = 'openai_api_key';
+          } else if (model.startsWith('claude-')) {
+            credentialKey = 'anthropic_api_key';
+          } else if (model.includes('/')) {
+            // OpenRouter models contain a slash (e.g., 'openai/gpt-4o')
+            credentialKey = 'openrouter_api_key';
+          }
         }
 
         if (credentialKey && context.variables.credential) {
@@ -512,6 +529,7 @@ async function executeModuleFunction(
             logger.info({
               modulePath,
               model,
+              provider,
               credentialKey
             }, 'Auto-injected AI API key from credentials');
           }

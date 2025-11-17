@@ -328,6 +328,7 @@ const PLATFORM_CAPABILITIES: Record<string, PlatformCapability> = {
   // AI Platforms
   'openai': { category: 'api_key' },
   'anthropic': { category: 'api_key' },
+  'openrouter': { category: 'api_key' },
   'cohere': { category: 'api_key' },
   'huggingface': { category: 'api_key' },
   'replicate': { category: 'api_key' },
@@ -512,12 +513,18 @@ export function analyzeWorkflowCredentials(
               explicitCredentials.add(match[1]);
             }
           } else {
-            // Detect provider from config
+            // Detect provider from config - prioritize explicit provider field
             let detectedProvider: string | null = null;
-            if (provider === 'anthropic' || (model && (model.includes('claude') || model.includes('anthropic')))) {
+
+            if (provider === 'openrouter') {
+              detectedProvider = 'openrouter';
+            } else if (provider === 'anthropic' || (model && (model.includes('claude') || model.includes('anthropic')))) {
               detectedProvider = 'anthropic';
             } else if (provider === 'openai' || (model && (model.includes('gpt') || model.includes('o1') || model.includes('o3')))) {
               detectedProvider = 'openai';
+            } else if (model && model.includes('/')) {
+              // OpenRouter models contain a slash (e.g., 'openai/gpt-4o', 'anthropic/claude-3.5-sonnet')
+              detectedProvider = 'openrouter';
             }
 
             if (detectedProvider) {
@@ -568,10 +575,15 @@ export function analyzeWorkflowCredentials(
           const model = options?.model as string | undefined;
 
           let detectedProvider: string | null = null;
-          if (provider === 'anthropic' || (model && (model.includes('claude') || model.includes('anthropic')))) {
+          if (provider === 'openrouter') {
+            detectedProvider = 'openrouter';
+          } else if (provider === 'anthropic' || (model && (model.includes('claude') || model.includes('anthropic')))) {
             detectedProvider = 'anthropic';
           } else if (provider === 'openai' || (model && (model.includes('gpt') || model.includes('o1') || model.includes('o3')))) {
             detectedProvider = 'openai';
+          } else if (model && model.includes('/')) {
+            // OpenRouter models contain a slash
+            detectedProvider = 'openrouter';
           }
 
           if (detectedProvider) {
@@ -745,6 +757,7 @@ export function getPlatformDisplayName(platform: string): string {
     // AI
     openai: 'OpenAI',
     anthropic: 'Anthropic',
+    openrouter: 'OpenRouter',
     cohere: 'Cohere',
     huggingface: 'Hugging Face',
     replicate: 'Replicate',
@@ -836,6 +849,7 @@ export function getPlatformIcon(platform: string): string {
     // AI
     openai: 'Sparkles',
     anthropic: 'Zap',
+    openrouter: 'Route',
     cohere: 'Sparkles',
     huggingface: 'Brain',
     replicate: 'Copy',

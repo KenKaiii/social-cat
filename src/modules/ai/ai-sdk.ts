@@ -1,17 +1,27 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { generateText as aiGenerateText, streamText, generateObject } from 'ai';
 import { createCircuitBreaker } from '@/lib/resilience';
 import { createRateLimiter, withRateLimit } from '@/lib/rate-limiter';
 import { logger } from '@/lib/logger';
 import { z } from 'zod';
+import type { AIProvider } from '@/lib/ai-models';
 
 /**
  * AI SDK Module - Unified AI Provider
  *
  * Uses Vercel AI SDK to provide multi-provider AI capabilities:
- * - OpenAI (GPT-4o, GPT-4o-mini, o1, o3, etc.)
- * - Anthropic (Claude 3.5 Sonnet, Haiku, Opus)
+ * - OpenAI (GPT-5, GPT-4.5, GPT-4o, o3, etc.)
+ * - Anthropic (Claude 4.5, Claude 3.5 Sonnet, Haiku, Opus)
+ * - OpenRouter (Access to hundreds of models from multiple providers)
+ *   - Google Gemini
+ *   - Meta Llama
+ *   - Mistral
+ *   - Cohere
+ *   - DeepSeek
+ *   - Perplexity
+ *   - And many more
  * - Unified API across all providers
  * - Built-in streaming support
  * - Circuit breakers and rate limiting
@@ -35,10 +45,7 @@ const aiRateLimiter = createRateLimiter({
   id: 'ai-sdk',
 });
 
-export type AIProvider = 'openai' | 'anthropic';
-export type OpenAIModel = 'gpt-4o' | 'gpt-4o-mini' | 'gpt-4-turbo' | 'o1' | 'o3' | 'o1-mini';
-export type AnthropicModel = 'claude-3-5-sonnet-20241022' | 'claude-3-5-haiku-20241022' | 'claude-3-opus-20240229';
-export type AIModel = OpenAIModel | AnthropicModel | string;
+export type AIModel = string;
 
 export interface AIMessage {
   role: 'system' | 'user' | 'assistant';
@@ -104,6 +111,16 @@ function getModelInstance(provider: AIProvider, modelName: string, apiKey?: stri
       apiKey: apiKey,
     });
     return anthropicProvider(modelName);
+  } else if (provider === 'openrouter') {
+    if (!apiKey) {
+      throw new Error(
+        'OpenRouter API key not found. Please add an OpenRouter API key in the credentials page.'
+      );
+    }
+    const openrouterProvider = createOpenRouter({
+      apiKey: apiKey,
+    });
+    return openrouterProvider.chat(modelName);
   }
   throw new Error(`Unknown provider: ${provider}`);
 }
@@ -113,6 +130,11 @@ function getModelInstance(provider: AIProvider, modelName: string, apiKey?: stri
  */
 function detectProvider(model?: string): AIProvider {
   if (!model) return 'openai'; // default
+
+  // OpenRouter models contain a slash (e.g., 'openai/gpt-4o', 'anthropic/claude-3.5-sonnet')
+  if (model.includes('/')) {
+    return 'openrouter';
+  }
 
   if (
     model.startsWith('gpt-') ||
