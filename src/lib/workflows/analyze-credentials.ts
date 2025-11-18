@@ -200,6 +200,15 @@ const PLATFORM_CAPABILITIES: Record<string, PlatformCapability> = {
     },
   },
 
+  'gamma': {
+    category: 'api_key',
+    functionRequirements: {
+      'generateGamma': 'api_key',
+      'getGenerationStatus': 'api_key',
+      'waitForCompletion': 'api_key',
+    },
+  },
+
   // HubSpot: Supports Private App API key and OAuth
   'hubspot': {
     category: 'both',
@@ -775,6 +784,7 @@ export function getPlatformDisplayName(platform: string): string {
     postgresql: 'PostgreSQL',
     mysql: 'MySQL',
     airtable: 'Airtable',
+    gamma: 'Gamma',
     notion: 'Notion',
     'google-sheets': 'Google Sheets',
     'google-calendar': 'Google Calendar',
@@ -867,6 +877,7 @@ export function getPlatformIcon(platform: string): string {
     postgresql: 'Database',
     mysql: 'Database',
     airtable: 'Database',
+    gamma: 'Presentation',
     notion: 'FileText',
     'google-sheets': 'Sheet',
     'google-calendar': 'Calendar',

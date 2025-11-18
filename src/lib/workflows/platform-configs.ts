@@ -408,6 +408,22 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     ]
   },
 
+  gamma: {
+    id: 'gamma',
+    name: 'Gamma',
+    category: 'Data',
+    fields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+        placeholder: 'gamma_...',
+        description: 'Your Gamma API key from gamma.app/settings/api'
+      }
+    ]
+  },
+
   airtable_oauth: {
     id: 'airtable_oauth',
     name: 'Airtable (OAuth)',
