@@ -11,6 +11,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { OutputRenderer } from './output-renderer';
+import { logger } from '@/lib/logger';
+import { formatDuration, formatDate } from '@/lib/format-utils';
 
 interface WorkflowRun {
   id: string;
@@ -56,25 +58,15 @@ export function ExecutionHistoryDialog({
         setRuns(data.runs || []);
       }
     } catch (error) {
-      console.error('Failed to fetch workflow runs:', error);
+      logger.error({ error }, 'Failed to fetch workflow runs');
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleString();
-  };
-
-  const formatDuration = (ms: number | null) => {
-    if (!ms) return 'N/A';
-    if (ms < 1000) return `${ms}ms`;
-    return `${(ms / 1000).toFixed(2)}s`;
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto scrollbar-none">
         <DialogHeader>
           <DialogTitle>Execution History</DialogTitle>
           <DialogDescription>{workflowName}</DialogDescription>

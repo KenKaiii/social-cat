@@ -8,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { logger } from '@/lib/logger';
 
 type SystemStatus = 'cold' | 'warming' | 'warm' | 'hot';
 
@@ -70,7 +71,7 @@ export function SystemStatusBadge() {
           statusCache = data; // Update cache
         }
       } catch (error) {
-        console.error('Failed to fetch system status:', error);
+        logger.error({ error }, 'Failed to fetch system status');
       }
     };
 

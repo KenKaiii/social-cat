@@ -1,12 +1,23 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Upload, Search, Workflow, CheckCircle2, XCircle } from 'lucide-react';
+import { Upload, Search, Workflow, CheckCircle2, XCircle, ChevronsUpDown, Check } from 'lucide-react';
 import { WorkflowsList } from '@/components/workflows/workflows-list';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import useSWR from 'swr';
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
@@ -19,56 +30,48 @@ import { Label } from '@/components/ui/label';
 import { WorkflowListItem } from '@/types/workflows';
 import { toast } from 'sonner';
 import { useClient } from '@/components/providers/ClientProvider';
+import { logger } from '@/lib/logger';
+
+// Fetcher function for workflows
+const workflowsFetcher = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Failed to fetch');
+  const data = await response.json();
+  return data.workflows || [];
+};
 
 export default function WorkflowsPage() {
-  const [workflows, setWorkflows] = useState<WorkflowListItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [triggerFilter, setTriggerFilter] = useState('all');
+  const [statusFilterOpen, setStatusFilterOpen] = useState(false);
+  const [triggerFilterOpen, setTriggerFilterOpen] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { currentClient } = useClient();
 
-  const fetchWorkflows = async () => {
-    try {
-      // Include organizationId in request if client is selected
-      const url = currentClient?.id
-        ? `/api/workflows?organizationId=${currentClient.id}`
-        : '/api/workflows';
-      const response = await fetch(url, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-        },
-      });
-      const data = await response.json();
-      setWorkflows(data.workflows || []);
-    } catch (error) {
-      console.error('Failed to fetch workflows:', error);
-    } finally {
-      setLoading(false);
+  // Build the API URL based on current client
+  const workflowsUrl = currentClient?.id
+    ? `/api/workflows?organizationId=${currentClient.id}`
+    : '/api/workflows';
+
+  // Use SWR for caching workflows data
+  const { data: workflows = [], isLoading: loading, mutate } = useSWR<WorkflowListItem[]>(
+    workflowsUrl,
+    workflowsFetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      refreshInterval: 60000, // Auto-refresh every 60 seconds
+      dedupingInterval: 10000, // Cache for 10 seconds
     }
+  );
+
+  const fetchWorkflows = async () => {
+    await mutate();
   };
-
-  useEffect(() => {
-    fetchWorkflows();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentClient]);
-
-  // Poll for new workflows every 60 seconds when page is visible
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        fetchWorkflows();
-      }
-    }, 60000);
-
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentClient]);
 
   const handleWorkflowDeleted = () => {
     fetchWorkflows();
@@ -97,7 +100,7 @@ export default function WorkflowsPage() {
         description: 'Workflow has been downloaded successfully.',
       });
     } catch (error) {
-      console.error('Failed to export workflow:', error);
+      logger.error({ error }, 'Failed to export workflow');
       toast.error('Failed to export workflow', {
         description: error instanceof Error ? error.message : 'Unknown error occurred',
       });
@@ -151,7 +154,7 @@ export default function WorkflowsPage() {
       // Hard reload the page to show the new workflow
       window.location.reload();
     } catch (error) {
-      console.error('Failed to import workflow:', error);
+      logger.error({ error }, 'Failed to import workflow');
       setImportError(
         error instanceof Error ? error.message : 'Failed to import workflow'
       );
@@ -279,39 +282,187 @@ export default function WorkflowsPage() {
               />
             </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="paused">Paused</SelectItem>
-              </SelectContent>
-            </Select>
+            <Popover open={statusFilterOpen} onOpenChange={setStatusFilterOpen} modal={true}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={statusFilterOpen}
+                  className="w-[140px] justify-between font-normal"
+                >
+                  {statusFilter === 'all' ? 'All statuses' : statusFilter === 'active' ? 'Active' : statusFilter === 'draft' ? 'Draft' : 'Paused'}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[140px] p-0" align="start">
+                <Command>
+                  <CommandList className="max-h-[300px]">
+                    <CommandGroup>
+                      <CommandItem
+                        value="all"
+                        onSelect={() => {
+                          setStatusFilter('all');
+                          setStatusFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${statusFilter === 'all' ? 'opacity-100' : 'opacity-0'}`} />
+                        All statuses
+                      </CommandItem>
+                      <CommandItem
+                        value="active"
+                        onSelect={() => {
+                          setStatusFilter('active');
+                          setStatusFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${statusFilter === 'active' ? 'opacity-100' : 'opacity-0'}`} />
+                        Active
+                      </CommandItem>
+                      <CommandItem
+                        value="draft"
+                        onSelect={() => {
+                          setStatusFilter('draft');
+                          setStatusFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${statusFilter === 'draft' ? 'opacity-100' : 'opacity-0'}`} />
+                        Draft
+                      </CommandItem>
+                      <CommandItem
+                        value="paused"
+                        onSelect={() => {
+                          setStatusFilter('paused');
+                          setStatusFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${statusFilter === 'paused' ? 'opacity-100' : 'opacity-0'}`} />
+                        Paused
+                      </CommandItem>
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
 
-            <Select value={triggerFilter} onValueChange={setTriggerFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="All triggers" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All triggers</SelectItem>
-                <SelectItem value="manual">Manual</SelectItem>
-                <SelectItem value="cron">Scheduled</SelectItem>
-                <SelectItem value="webhook">Webhook</SelectItem>
-                <SelectItem value="chat">Chat</SelectItem>
-                <SelectItem value="gmail">Gmail</SelectItem>
-                <SelectItem value="outlook">Outlook</SelectItem>
-                <SelectItem value="telegram">Telegram</SelectItem>
-                <SelectItem value="discord">Discord</SelectItem>
-              </SelectContent>
-            </Select>
+            <Popover open={triggerFilterOpen} onOpenChange={setTriggerFilterOpen} modal={true}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={triggerFilterOpen}
+                  className="w-[140px] justify-between font-normal"
+                >
+                  {triggerFilter === 'all' ? 'All triggers' :
+                   triggerFilter === 'cron' ? 'Scheduled' :
+                   triggerFilter.charAt(0).toUpperCase() + triggerFilter.slice(1)}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[140px] p-0" align="start">
+                <Command>
+                  <CommandList className="max-h-[300px]">
+                    <CommandGroup>
+                      <CommandItem
+                        value="all"
+                        onSelect={() => {
+                          setTriggerFilter('all');
+                          setTriggerFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${triggerFilter === 'all' ? 'opacity-100' : 'opacity-0'}`} />
+                        All triggers
+                      </CommandItem>
+                      <CommandItem
+                        value="manual"
+                        onSelect={() => {
+                          setTriggerFilter('manual');
+                          setTriggerFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${triggerFilter === 'manual' ? 'opacity-100' : 'opacity-0'}`} />
+                        Manual
+                      </CommandItem>
+                      <CommandItem
+                        value="cron"
+                        onSelect={() => {
+                          setTriggerFilter('cron');
+                          setTriggerFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${triggerFilter === 'cron' ? 'opacity-100' : 'opacity-0'}`} />
+                        Scheduled
+                      </CommandItem>
+                      <CommandItem
+                        value="webhook"
+                        onSelect={() => {
+                          setTriggerFilter('webhook');
+                          setTriggerFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${triggerFilter === 'webhook' ? 'opacity-100' : 'opacity-0'}`} />
+                        Webhook
+                      </CommandItem>
+                      <CommandItem
+                        value="chat"
+                        onSelect={() => {
+                          setTriggerFilter('chat');
+                          setTriggerFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${triggerFilter === 'chat' ? 'opacity-100' : 'opacity-0'}`} />
+                        Chat
+                      </CommandItem>
+                      <CommandItem
+                        value="gmail"
+                        onSelect={() => {
+                          setTriggerFilter('gmail');
+                          setTriggerFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${triggerFilter === 'gmail' ? 'opacity-100' : 'opacity-0'}`} />
+                        Gmail
+                      </CommandItem>
+                      <CommandItem
+                        value="outlook"
+                        onSelect={() => {
+                          setTriggerFilter('outlook');
+                          setTriggerFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${triggerFilter === 'outlook' ? 'opacity-100' : 'opacity-0'}`} />
+                        Outlook
+                      </CommandItem>
+                      <CommandItem
+                        value="telegram"
+                        onSelect={() => {
+                          setTriggerFilter('telegram');
+                          setTriggerFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${triggerFilter === 'telegram' ? 'opacity-100' : 'opacity-0'}`} />
+                        Telegram
+                      </CommandItem>
+                      <CommandItem
+                        value="discord"
+                        onSelect={() => {
+                          setTriggerFilter('discord');
+                          setTriggerFilterOpen(false);
+                        }}
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${triggerFilter === 'discord' ? 'opacity-100' : 'opacity-0'}`} />
+                        Discord
+                      </CommandItem>
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <Button
             onClick={handleImportClick}
-            className="bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 group"
+            variant="default"
+            className="group"
           >
             <Upload className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:-translate-y-0.5" />
             Import

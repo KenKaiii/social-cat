@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
+import useSWR from 'swr';
 
 export interface Client {
   id: string;
@@ -31,38 +32,32 @@ const ClientContext = createContext<ClientContextType>({
   refetchClients: async () => {},
 });
 
+// Fetcher function for SWR
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Failed to fetch');
+  const data = await response.json();
+  return data.clients || [];
+};
+
 export function ClientProvider({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
   const [currentClient, setCurrentClientState] = useState<Client | null>(null);
-  const [clients, setClients] = useState<Client[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch user's clients
-  useEffect(() => {
-    if (status === 'loading') return;
-
-    if (status === 'authenticated' && session?.user?.id) {
-      fetchClients();
-    } else {
-      setIsLoading(false);
+  // Use SWR for caching clients data
+  const shouldFetch = status === 'authenticated' && session?.user?.id;
+  const { data: clients = [], isLoading, mutate } = useSWR<Client[]>(
+    shouldFetch ? '/api/clients' : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 30000, // Cache for 30 seconds
     }
-  }, [status, session]);
+  );
 
   const fetchClients = async () => {
-    try {
-      const response = await fetch('/api/clients');
-      if (response.ok) {
-        const data = await response.json();
-        setClients(data.clients || []);
-
-        // Don't auto-select first client here - let the restoration logic handle it
-        // This prevents overriding localStorage selection
-      }
-    } catch (error) {
-      console.error('Failed to fetch clients:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    await mutate();
   };
 
   const setCurrentClient = (client: Client | null) => {

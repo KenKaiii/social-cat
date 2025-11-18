@@ -125,7 +125,7 @@ export function CredentialForm({ onSuccess }: CredentialFormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="platform">Platform</Label>
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={setOpen} modal={true}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -140,9 +140,9 @@ export function CredentialForm({ onSuccess }: CredentialFormProps) {
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
-            <Command>
+            <Command loop>
               <CommandInput placeholder="Search platforms..." className="h-9" />
-              <CommandList>
+              <CommandList className="max-h-[300px] overflow-y-scroll">
                 <CommandEmpty>No platform found.</CommandEmpty>
                 {Object.entries(platformsByCategory).map(([category, platforms]) => (
                   <CommandGroup key={category} heading={category}>

@@ -3,6 +3,7 @@ import { getAgentWorkspaceDir, initializeAgentWorkspace } from '@/lib/agent-work
 import { spawn } from 'child_process';
 import { existsSync } from 'fs';
 import { join } from 'path';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,7 +25,7 @@ export async function GET() {
       workspaceDir: getAgentWorkspaceDir(),
     });
   } catch (error) {
-    console.error('Error checking setup:', error);
+    logger.error({ error }, 'Error checking setup');
     return new Response('Internal server error', { status: 500 });
   }
 }
@@ -81,7 +82,7 @@ export async function POST() {
             controller.close();
           });
         } catch (error) {
-          console.error('Installation error:', error);
+          logger.error({ error }, 'Installation error');
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ type: 'error', error: error instanceof Error ? error.message : 'Unknown error' })}\n\n`)
           );
@@ -98,7 +99,7 @@ export async function POST() {
       },
     });
   } catch (error) {
-    console.error('Setup request error:', error);
+    logger.error({ error }, 'Setup request error');
     return new Response('Internal server error', { status: 500 });
   }
 }

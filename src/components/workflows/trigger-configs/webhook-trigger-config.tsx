@@ -5,14 +5,19 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Copy, Check, Send, Loader2 } from 'lucide-react';
+import { Copy, Check, Send, Loader2, ChevronsUpDown } from 'lucide-react';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { logger } from '@/lib/logger';
 
 interface WebhookTriggerConfigProps {
   workflowId: string;
@@ -31,6 +36,7 @@ export function WebhookTriggerConfig({
   const [testPayload, setTestPayload] = useState('{\n  "message": "Test webhook"\n}');
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; output?: unknown; error?: string } | null>(null);
+  const [methodOpen, setMethodOpen] = useState(false);
 
   const webhookUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/${workflowId}`;
 
@@ -47,7 +53,7 @@ export function WebhookTriggerConfig({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy:', error);
+      logger.error({ error }, 'Failed to copy');
     }
   };
 
@@ -122,18 +128,41 @@ export function WebhookTriggerConfig({
 
         <div className="space-y-2">
           <Label htmlFor="test-method">HTTP Method</Label>
-          <Select value={testMethod} onValueChange={setTestMethod}>
-            <SelectTrigger id="test-method">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="GET">GET</SelectItem>
-              <SelectItem value="POST">POST</SelectItem>
-              <SelectItem value="PUT">PUT</SelectItem>
-              <SelectItem value="PATCH">PATCH</SelectItem>
-              <SelectItem value="DELETE">DELETE</SelectItem>
-            </SelectContent>
-          </Select>
+          <Popover open={methodOpen} onOpenChange={setMethodOpen} modal={true}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={methodOpen}
+                className="w-full justify-between font-normal text-sm"
+              >
+                {testMethod}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+              <Command>
+                <CommandList className="max-h-[300px]">
+                  <CommandGroup>
+                    {['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map((method) => (
+                      <CommandItem
+                        key={method}
+                        value={method}
+                        onSelect={() => {
+                          setTestMethod(method);
+                          setMethodOpen(false);
+                        }}
+                        className="text-sm"
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${testMethod === method ? 'opacity-100' : 'opacity-0'}`} />
+                        {method}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-2">
@@ -188,7 +217,7 @@ export function WebhookTriggerConfig({
               <p className="text-xs text-red-700 dark:text-red-300">{testResult.error}</p>
             )}
             {testResult.output !== undefined && (
-              <pre className="mt-2 text-xs bg-black/5 dark:bg-white/5 p-2 rounded overflow-auto max-h-32">
+              <pre className="mt-2 text-xs bg-black/5 dark:bg-white/5 p-2 rounded overflow-auto max-h-32 scrollbar-none">
                 {typeof testResult.output === 'string'
                   ? testResult.output
                   : JSON.stringify(testResult.output, null, 2)}

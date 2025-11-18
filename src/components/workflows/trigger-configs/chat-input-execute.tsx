@@ -4,9 +4,22 @@ import { useState, useEffect, useCallback } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { InputField } from './chat-input-trigger-config';
+import { logger } from '@/lib/logger';
 
 interface ChatInputExecuteProps {
   workflowId: string;
@@ -30,6 +43,7 @@ export function ChatInputExecute({ fields, onExecute, executing = false, onReady
     });
     return initial;
   });
+  const [openSelects, setOpenSelects] = useState<Record<string, boolean>>({});
 
   const handleExecute = useCallback(async () => {
     // Validate required fields
@@ -43,7 +57,7 @@ export function ChatInputExecute({ fields, onExecute, executing = false, onReady
     try {
       await onExecute(values);
     } catch (error) {
-      console.error('Execution error:', error);
+      logger.error({ error }, 'Execution error');
       const errorMessage = error instanceof Error ? error.message : 'Failed to execute workflow';
       toast.error(errorMessage);
     }
@@ -101,22 +115,42 @@ export function ChatInputExecute({ fields, onExecute, executing = false, onReady
 
       case 'select':
         return (
-          <Select
-            value={String(values[field.key] || '')}
-            onValueChange={(value) => setValues({ ...values, [field.key]: value })}
-            disabled={executing}
-          >
-            <SelectTrigger id={field.key}>
-              <SelectValue placeholder={field.placeholder || 'Select an option'} />
-            </SelectTrigger>
-            <SelectContent>
-              {(field.options || []).map((option, index) => (
-                <SelectItem key={`${field.key}-${option}-${index}`} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={openSelects[field.key]} onOpenChange={(open) => setOpenSelects({ ...openSelects, [field.key]: open })} modal={true}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={openSelects[field.key]}
+                className="w-full justify-between font-normal text-sm"
+                disabled={executing}
+              >
+                {String(values[field.key] || '') || field.placeholder || 'Select an option'}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+              <Command>
+                <CommandList className="max-h-[300px]">
+                  <CommandGroup>
+                    {(field.options || []).map((option, index) => (
+                      <CommandItem
+                        key={`${field.key}-${option}-${index}`}
+                        value={option}
+                        onSelect={() => {
+                          setValues({ ...values, [field.key]: option });
+                          setOpenSelects({ ...openSelects, [field.key]: false });
+                        }}
+                        className="text-sm"
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${values[field.key] === option ? 'opacity-100' : 'opacity-0'}`} />
+                        {option}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         );
 
       case 'checkbox':

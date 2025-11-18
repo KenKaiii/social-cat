@@ -4,7 +4,8 @@ import { db } from '@/lib/db';
 import { oauthStateTable, accountsTable, userCredentialsTable } from '@/lib/schema';
 import { logger } from '@/lib/logger';
 import { eq, and } from 'drizzle-orm';
-import { encrypt, decrypt } from '@/lib/encryption';
+import { encrypt } from '@/lib/encryption';
+import { getOAuthAppCredentials } from '@/lib/oauth-credential-helper';
 
 /**
  * Twitter OAuth 2.0 Callback Handler
@@ -96,17 +97,41 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Decrypt and parse the OAuth app credentials
-    const decrypted = decrypt(appCred.encryptedValue);
-    const credentials = JSON.parse(decrypted);
-    const clientId = credentials.client_id;
-    const clientSecret = credentials.client_secret;
+    // Extract and decrypt OAuth app credentials
+    let clientId: string;
+    let clientSecret: string;
+    try {
+      const creds = getOAuthAppCredentials(appCred, 'Twitter');
+      clientId = creds.clientId;
+      clientSecret = creds.clientSecret;
+    } catch (error) {
+      logger.error({ error }, 'Failed to get Twitter OAuth app credentials in callback');
 
-    if (!clientId || !clientSecret) {
-      logger.error('Invalid Twitter OAuth app credentials');
-      return NextResponse.json(
-        { error: 'Twitter OAuth is not configured' },
-        { status: 500 }
+      return new NextResponse(
+        `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Connection Failed</title>
+            <style>
+              body { font-family: system-ui; padding: 40px; text-align: center; }
+              .error { color: #dc2626; }
+            </style>
+          </head>
+          <body>
+            <h1 class="error">Connection Failed</h1>
+            <p>An error occurred while connecting to Twitter.</p>
+            <p>${error instanceof Error ? error.message : 'Invalid credentials'}</p>
+            <script>
+              setTimeout(() => window.close(), 5000);
+            </script>
+          </body>
+        </html>
+        `,
+        {
+          status: 500,
+          headers: { 'Content-Type': 'text/html' },
+        }
       );
     }
 

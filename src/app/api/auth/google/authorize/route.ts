@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { oauthStateTable, userCredentialsTable } from '@/lib/schema';
 import { logger } from '@/lib/logger';
-import { decrypt } from '@/lib/encryption';
+import { getOAuthAppCredentials } from '@/lib/oauth-credential-helper';
 import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
 
@@ -45,16 +45,15 @@ export async function GET() {
       );
     }
 
-    // Decrypt and parse the OAuth app credentials
-    const decrypted = decrypt(appCred.encryptedValue);
-    const credentials = JSON.parse(decrypted);
-    const clientId = credentials.client_id;
-    const clientSecret = credentials.client_secret;
-
-    if (!clientId || !clientSecret) {
-      logger.error('Invalid Google OAuth app credentials');
+    // Get client credentials
+    let clientId: string;
+    try {
+      const creds = getOAuthAppCredentials(appCred, 'Google');
+      clientId = creds.clientId;
+    } catch (error) {
+      logger.error({ error }, 'Failed to get Google OAuth app credentials');
       return NextResponse.json(
-        { error: 'Invalid Google OAuth app credentials. Please re-add the credentials.' },
+        { error: error instanceof Error ? error.message : 'Invalid Google OAuth app credentials' },
         { status: 500 }
       );
     }

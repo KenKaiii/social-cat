@@ -1,4 +1,5 @@
 import { getModuleRegistry } from '@/lib/workflows/module-registry';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -121,7 +122,7 @@ export async function GET(request: Request) {
       suggestions: []
     });
   } catch (error) {
-    console.error('Module search error:', error);
+    logger.error({ error }, 'Module search error');
     return new Response('Internal server error', { status: 500 });
   }
 }

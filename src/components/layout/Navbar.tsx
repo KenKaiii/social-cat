@@ -40,6 +40,7 @@ export function Navbar() {
             <Link
               key={item.name}
               href={item.href}
+              prefetch={true}
               data-active={isActive}
               className={`
                 relative inline-block select-none px-3 py-4 no-underline transition-colors duration-200 text-14

@@ -76,7 +76,18 @@ export async function POST(
 
     // Get raw body for signature verification
     const rawBody = await request.text();
-    const body = rawBody ? JSON.parse(rawBody) : {};
+    let body = {};
+    if (rawBody) {
+      try {
+        body = JSON.parse(rawBody);
+      } catch (parseError) {
+        logger.error({ workflowId: id, parseError }, 'Failed to parse webhook body');
+        return NextResponse.json(
+          { error: 'Invalid JSON payload' },
+          { status: 400 }
+        );
+      }
+    }
 
     // Verify webhook signature if secret is configured
     const webhookSecret = trigger.config?.webhookSecret as string | undefined;

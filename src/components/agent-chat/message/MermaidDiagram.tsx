@@ -76,10 +76,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
 
   if (isLoading) {
     return (
-      <div
-        className="my-3 p-4 border border-border rounded-lg bg-black/20 overflow-x-auto flex items-center justify-center"
-        style={{ minHeight: '100px' }}
-      >
+      <div className="my-3 p-4 border border-border rounded-lg bg-black/20 overflow-x-auto flex items-center justify-center min-h-[100px]">
         <div className="text-sm text-muted-foreground animate-pulse">Loading diagram...</div>
       </div>
     );
@@ -88,8 +85,7 @@ export function MermaidDiagram({ chart }: MermaidDiagramProps) {
   return (
     <div
       ref={ref}
-      className="my-3 p-4 border border-border rounded-lg bg-black/20 overflow-x-auto"
-      style={{ minHeight: '100px' }}
+      className="my-3 p-4 border border-border rounded-lg bg-black/20 overflow-x-auto min-h-[100px]"
     />
   );
 }

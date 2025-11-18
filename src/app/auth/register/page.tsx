@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 function RegisterForm() {
   const router = useRouter();
@@ -76,7 +77,7 @@ function RegisterForm() {
         toast.error(data.error || 'Failed to create account');
       }
     } catch (error) {
-      console.error('Registration error:', error);
+      logger.error({ error }, 'Registration error');
       toast.error('An error occurred. Please try again.');
     } finally {
       setLoading(false);

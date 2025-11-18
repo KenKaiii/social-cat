@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { TableSkeleton } from '@/components/ui/card-skeleton';
-import { AlertCircle, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 import { useClient } from '@/components/providers/ClientProvider';
 import { toast } from 'sonner';
+import { StatusIcon } from '@/components/ui/status-icon';
 import {
   useReactTable,
   getCoreRowModel,
@@ -13,6 +13,8 @@ import {
   flexRender,
   type ColumnDef,
 } from '@tanstack/react-table';
+import { formatDuration, formatRelativeTime } from '@/lib/format-utils';
+import { logger } from '@/lib/logger';
 
 interface JobLog {
   id: number;
@@ -24,35 +26,6 @@ interface JobLog {
   createdAt: Date | string;
 }
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case 'success':
-      return (
-        <div className="p-1 rounded-md bg-gradient-to-br from-green-400 to-emerald-500">
-          <CheckCircle2 className="h-3 w-3 text-white" />
-        </div>
-      );
-    case 'error':
-      return (
-        <div className="p-1 rounded-md bg-gradient-to-br from-red-400 to-rose-500">
-          <AlertCircle className="h-3 w-3 text-white" />
-        </div>
-      );
-    case 'warning':
-      return (
-        <div className="p-1 rounded-md bg-gradient-to-br from-amber-400 to-yellow-500">
-          <AlertTriangle className="h-3 w-3 text-white" />
-        </div>
-      );
-    default:
-      return (
-        <div className="p-1 rounded-md bg-gradient-to-br from-blue-400 to-cyan-500">
-          <Clock className="h-3 w-3 text-white" />
-        </div>
-      );
-  }
-};
-
 const formatJobName = (name: string) => {
   return name
     .split('-')
@@ -60,52 +33,17 @@ const formatJobName = (name: string) => {
     .join(' ');
 };
 
-const formatDuration = (ms?: number | null) => {
-  if (!ms) return '—';
-  if (ms < 1000) return `${ms}ms`;
-  return `${(ms / 1000).toFixed(1)}s`;
-};
-
-const formatDate = (date: Date | string | null) => {
-  // Handle null/undefined dates
-  if (!date) {
-    return '—';
-  }
-
-  const d = typeof date === 'string' ? new Date(date) : date;
-
-  // Validate the date
-  if (isNaN(d.getTime())) {
-    return 'Invalid date';
-  }
-
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-
-  return d.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
 // Component to display time that auto-updates every minute
 function TimeCell({ date }: { date: Date | string | null }) {
-  const [formattedTime, setFormattedTime] = useState(() => formatDate(date));
+  const [formattedTime, setFormattedTime] = useState(() => formatRelativeTime(date));
 
   useEffect(() => {
     // Update the formatted time immediately in case the date prop changed
-    setFormattedTime(formatDate(date));
+    setFormattedTime(formatRelativeTime(date));
 
     // Set up interval to update time display every minute
     const interval = setInterval(() => {
-      setFormattedTime(formatDate(date));
+      setFormattedTime(formatRelativeTime(date));
     }, 60000); // Update every minute
 
     return () => clearInterval(interval);
@@ -124,7 +62,7 @@ const columns: ColumnDef<JobLog>[] = [
     header: () => <div className="w-10">Status</div>,
     cell: ({ row }) => (
       <div className="flex items-center justify-center">
-        {getStatusIcon(row.original.status)}
+        <StatusIcon status={row.original.status} size="sm" />
       </div>
     ),
   },
@@ -178,7 +116,7 @@ const columns: ColumnDef<JobLog>[] = [
     header: () => <div className="text-right">Duration</div>,
     cell: ({ row }) => (
       <div className="text-right text-xs font-mono text-secondary">
-        {formatDuration(row.original.duration)}
+        {formatDuration(row.original.duration, '—')}
       </div>
     ),
   },
@@ -204,7 +142,7 @@ export default function ActivityPage() {
       const data = await response.json();
       setLogs(data.logs || []);
     } catch (error) {
-      console.error('Failed to fetch logs:', error);
+      logger.error({ error }, 'Failed to fetch logs');
     } finally {
       setLoading(false);
     }

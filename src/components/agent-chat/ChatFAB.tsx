@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { MessageSquare } from "lucide-react";
 import { ChatContainer } from "./ChatContainer";
+import { Button } from "@/components/ui/button";
 
 export function ChatFAB() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,14 +18,15 @@ export function ChatFAB() {
   return (
     <>
       {!isOpen && (
-        <button
+        <Button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 h-10 px-4 rounded-md shadow-sm bg-primary hover:bg-gray-900 transition-all duration-150 flex items-center gap-2 text-primary-foreground font-medium text-14 border border-gray-300"
+          variant="default"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40"
           aria-label="Build"
         >
           <MessageSquare className="w-4 h-4" />
           <span>Build</span>
-        </button>
+        </Button>
       )}
 
       <ChatContainer isOpen={isOpen} onClose={() => setIsOpen(false)} />

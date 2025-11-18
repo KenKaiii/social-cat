@@ -16,6 +16,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { formatDate } from '@/lib/format-utils';
+import { logger } from '@/lib/logger';
 
 interface WorkflowCardProps {
   workflow: WorkflowListItem;
@@ -51,7 +53,7 @@ export const WorkflowCard = memo(function WorkflowCard({ workflow, onDeleted, on
       toast.success('Workflow deleted');
       onDeleted();
     } catch (error) {
-      console.error('Error deleting workflow:', error);
+      logger.error({ error }, 'Error deleting workflow');
       toast.error('Failed to delete workflow');
     } finally {
       setDeleting(false);
@@ -91,7 +93,7 @@ export const WorkflowCard = memo(function WorkflowCard({ workflow, onDeleted, on
       toast.success(`Workflow ${checked ? 'activated' : 'deactivated'}`);
       onUpdated?.();
     } catch (error) {
-      console.error('Error updating workflow status:', error);
+      logger.error({ error }, 'Error updating workflow status');
       toast.error('Failed to update workflow status');
       setOptimisticStatus(null);
     } finally {
@@ -154,7 +156,7 @@ export const WorkflowCard = memo(function WorkflowCard({ workflow, onDeleted, on
       setEditDialogOpen(false);
       onUpdated?.();
     } catch (error) {
-      console.error('Error updating workflow:', error);
+      logger.error({ error }, 'Error updating workflow');
       toast.error('Failed to update workflow');
     } finally {
       setSaving(false);
@@ -173,18 +175,6 @@ export const WorkflowCard = memo(function WorkflowCard({ workflow, onDeleted, on
       default:
         return 'outline';
     }
-  };
-
-  const formatDate = (date: Date | string | null) => {
-    if (!date) return 'Never';
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   const TriggerIcon = useMemo(() => {
@@ -306,11 +296,11 @@ export const WorkflowCard = memo(function WorkflowCard({ workflow, onDeleted, on
         <div className="space-y-1 text-xs text-muted-foreground">
           <div className="flex justify-between">
             <span>Created:</span>
-            <span>{formatDate(workflow.createdAt)}</span>
+            <span>{formatDate(workflow.createdAt, 'Never')}</span>
           </div>
           <div className="flex justify-between">
             <span>Last run:</span>
-            <span>{formatDate(workflow.lastRun)}</span>
+            <span>{formatDate(workflow.lastRun, 'Never')}</span>
           </div>
           <div className="flex justify-between">
             <span>{workflow.trigger.type === 'chat' ? 'Chats:' : 'Runs:'}</span>

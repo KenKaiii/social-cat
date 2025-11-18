@@ -5,13 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Play, Loader2, Settings2, Check, X, Filter, History, MessageSquare } from 'lucide-react';
+import { Play, Loader2, Settings2, Check, X, Filter, History, MessageSquare, ChevronsUpDown } from 'lucide-react';
 import { SchedulePicker } from './SchedulePicker';
 import { Input } from '@/components/ui/input';
 import { ReplyHistoryTable } from '@/components/twitter/ReplyHistoryTable';
 import { PostedThreadsHistoryTable } from '@/components/twitter/PostedThreadsHistoryTable';
 import { showTwitter403Error, showTwitter429Error, showApiError, showTwitterSuccess } from '@/lib/toast-helpers';
 import { NEWS_TOPICS, NEWS_LANGUAGES, NEWS_COUNTRIES } from '@/modules/external-apis/rapidapi/newsapi/constants';
+import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { logger } from '@/lib/logger';
 
 interface CompactAutomationRowProps {
   title: string;
@@ -62,6 +65,10 @@ export function CompactAutomationRow({
   const [noEmojis, setNoEmojis] = useState(false);
   const [casualGrammar, setCasualGrammar] = useState(false);
   const [maxCharacters, setMaxCharacters] = useState('280'); // '280', '200', '150', '100'
+  const [maxCharactersOpen, setMaxCharactersOpen] = useState(false);
+  const [newsTopicOpen, setNewsTopicOpen] = useState(false);
+  const [newsLanguageOpen, setNewsLanguageOpen] = useState(false);
+  const [newsCountryOpen, setNewsCountryOpen] = useState(false);
 
   // Load settings from database on mount
   useEffect(() => {
@@ -94,7 +101,7 @@ export function CompactAutomationRow({
           if (settings.maxCharacters !== undefined) setMaxCharacters(settings.maxCharacters);
         }
       } catch (error) {
-        console.error('Failed to load automation settings:', error);
+        logger.error({ error }, 'Failed to load automation settings');
       } finally {
         setLoading(false);
       }
@@ -189,7 +196,7 @@ export function CompactAutomationRow({
         }),
       });
     } catch (error) {
-      console.error('Failed to save automation settings:', error);
+      logger.error({ error }, 'Failed to save automation settings');
     }
   };
 
@@ -209,16 +216,15 @@ export function CompactAutomationRow({
       const data = await response.json();
 
       if (!response.ok) {
-        console.error(`Failed to ${action} job:`, data.error);
+        logger.error({ error: data.error, action }, `Failed to ${action} job`);
         showApiError(data.error || `Failed to ${action} job`);
         return false;
       }
 
-      // Log success message
-      console.log(`✅ ${data.message}`);
+      logger.info({ message: data.message }, 'Job action completed');
       return true;
     } catch (error) {
-      console.error(`Error ${action}ing job:`, error);
+      logger.error({ error, action }, `Error ${action}ing job`);
       showApiError(`Failed to ${action} job`);
       return false;
     }
@@ -416,16 +422,74 @@ export function CompactAutomationRow({
                   <label className="text-xs font-medium text-foreground">
                     Max Characters per Tweet
                   </label>
-                  <select
-                    value={maxCharacters}
-                    onChange={(e) => setMaxCharacters(e.target.value)}
-                    className="h-8 w-full rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                  >
-                    <option value="280">280 (Twitter max)</option>
-                    <option value="200">200 (Short & punchy)</option>
-                    <option value="150">150 (Very concise)</option>
-                    <option value="100">100 (Ultra brief)</option>
-                  </select>
+                  <Popover open={maxCharactersOpen} onOpenChange={setMaxCharactersOpen} modal={true}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={maxCharactersOpen}
+                        className="w-full justify-between font-normal h-8 text-sm"
+                      >
+                        {maxCharacters === '280' && '280 (Twitter max)'}
+                        {maxCharacters === '200' && '200 (Short & punchy)'}
+                        {maxCharacters === '150' && '150 (Very concise)'}
+                        {maxCharacters === '100' && '100 (Ultra brief)'}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+                      <Command>
+                        <CommandList className="max-h-[300px]">
+                          <CommandGroup>
+                            <CommandItem
+                              value="280"
+                              onSelect={() => {
+                                setMaxCharacters('280');
+                                setMaxCharactersOpen(false);
+                              }}
+                              className="text-sm"
+                            >
+                              <Check className={`mr-2 h-4 w-4 ${maxCharacters === '280' ? 'opacity-100' : 'opacity-0'}`} />
+                              280 (Twitter max)
+                            </CommandItem>
+                            <CommandItem
+                              value="200"
+                              onSelect={() => {
+                                setMaxCharacters('200');
+                                setMaxCharactersOpen(false);
+                              }}
+                              className="text-sm"
+                            >
+                              <Check className={`mr-2 h-4 w-4 ${maxCharacters === '200' ? 'opacity-100' : 'opacity-0'}`} />
+                              200 (Short & punchy)
+                            </CommandItem>
+                            <CommandItem
+                              value="150"
+                              onSelect={() => {
+                                setMaxCharacters('150');
+                                setMaxCharactersOpen(false);
+                              }}
+                              className="text-sm"
+                            >
+                              <Check className={`mr-2 h-4 w-4 ${maxCharacters === '150' ? 'opacity-100' : 'opacity-0'}`} />
+                              150 (Very concise)
+                            </CommandItem>
+                            <CommandItem
+                              value="100"
+                              onSelect={() => {
+                                setMaxCharacters('100');
+                                setMaxCharactersOpen(false);
+                              }}
+                              className="text-sm"
+                            >
+                              <Check className={`mr-2 h-4 w-4 ${maxCharacters === '100' ? 'opacity-100' : 'opacity-0'}`} />
+                              100 (Ultra brief)
+                            </CommandItem>
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                   <p className="text-[10px] text-secondary">
                     AI will aim to stay under this character limit
                   </p>
@@ -479,17 +543,41 @@ export function CompactAutomationRow({
                     <label className="text-xs font-medium text-foreground">
                       News Topic
                     </label>
-                    <select
-                      value={newsTopic}
-                      onChange={(e) => setNewsTopic(e.target.value)}
-                      className="h-8 w-full rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                    >
-                      {NEWS_TOPICS.map((topic) => (
-                        <option key={topic.id} value={topic.id}>
-                          {topic.name}
-                        </option>
-                      ))}
-                    </select>
+                    <Popover open={newsTopicOpen} onOpenChange={setNewsTopicOpen} modal={true}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={newsTopicOpen}
+                          className="w-full justify-between font-normal h-8 text-sm"
+                        >
+                          {NEWS_TOPICS.find((topic) => topic.id === newsTopic)?.name || newsTopic}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+                        <Command>
+                          <CommandList className="max-h-[300px]">
+                            <CommandGroup>
+                              {NEWS_TOPICS.map((topic) => (
+                                <CommandItem
+                                  key={topic.id}
+                                  value={topic.id}
+                                  onSelect={() => {
+                                    setNewsTopic(topic.id);
+                                    setNewsTopicOpen(false);
+                                  }}
+                                  className="text-sm"
+                                >
+                                  <Check className={`mr-2 h-4 w-4 ${newsTopic === topic.id ? 'opacity-100' : 'opacity-0'}`} />
+                                  {topic.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <p className="text-[10px] text-secondary">
                       Fetch trending news from this topic to create threads
                     </p>
@@ -500,34 +588,82 @@ export function CompactAutomationRow({
                       <label className="text-xs font-medium text-foreground">
                         Language
                       </label>
-                      <select
-                        value={newsLanguage}
-                        onChange={(e) => setNewsLanguage(e.target.value)}
-                        className="h-8 w-full rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                      >
-                        {NEWS_LANGUAGES.map((lang) => (
-                          <option key={lang.code} value={lang.code}>
-                            {lang.name}
-                          </option>
-                        ))}
-                      </select>
+                      <Popover open={newsLanguageOpen} onOpenChange={setNewsLanguageOpen} modal={true}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={newsLanguageOpen}
+                            className="w-full justify-between font-normal h-8 text-sm"
+                          >
+                            {NEWS_LANGUAGES.find((lang) => lang.code === newsLanguage)?.name || newsLanguage}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+                          <Command>
+                            <CommandList className="max-h-[300px]">
+                              <CommandGroup>
+                                {NEWS_LANGUAGES.map((lang) => (
+                                  <CommandItem
+                                    key={lang.code}
+                                    value={lang.code}
+                                    onSelect={() => {
+                                      setNewsLanguage(lang.code);
+                                      setNewsLanguageOpen(false);
+                                    }}
+                                    className="text-sm"
+                                  >
+                                    <Check className={`mr-2 h-4 w-4 ${newsLanguage === lang.code ? 'opacity-100' : 'opacity-0'}`} />
+                                    {lang.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </div>
 
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-foreground">
                         Country
                       </label>
-                      <select
-                        value={newsCountry}
-                        onChange={(e) => setNewsCountry(e.target.value)}
-                        className="h-8 w-full rounded-md border border-border bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                      >
-                        {NEWS_COUNTRIES.map((country) => (
-                          <option key={country.code} value={country.code}>
-                            {country.name}
-                          </option>
-                        ))}
-                      </select>
+                      <Popover open={newsCountryOpen} onOpenChange={setNewsCountryOpen} modal={true}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={newsCountryOpen}
+                            className="w-full justify-between font-normal h-8 text-sm"
+                          >
+                            {NEWS_COUNTRIES.find((country) => country.code === newsCountry)?.name || newsCountry}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+                          <Command>
+                            <CommandList className="max-h-[300px]">
+                              <CommandGroup>
+                                {NEWS_COUNTRIES.map((country) => (
+                                  <CommandItem
+                                    key={country.code}
+                                    value={country.code}
+                                    onSelect={() => {
+                                      setNewsCountry(country.code);
+                                      setNewsCountryOpen(false);
+                                    }}
+                                    className="text-sm"
+                                  >
+                                    <Check className={`mr-2 h-4 w-4 ${newsCountry === country.code ? 'opacity-100' : 'opacity-0'}`} />
+                                    {country.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
                 </div>
@@ -669,7 +805,7 @@ export function CompactAutomationRow({
                   }
                 </DialogDescription>
               </DialogHeader>
-              <div className="overflow-y-auto max-h-[calc(85vh-8rem)]">
+              <div className="overflow-y-auto max-h-[calc(85vh-8rem)] scrollbar-none">
                 {jobName === 'reply-to-tweets' ? (
                   <ReplyHistoryTable />
                 ) : (

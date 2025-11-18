@@ -6,6 +6,7 @@ import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { Sidebar } from './Sidebar';
 import { ModelSelector } from './ModelSelector';
+import { logger } from '@/lib/logger';
 
 interface ContentBlock {
   type: 'text' | 'tool_use';
@@ -64,7 +65,7 @@ export function ChatContainer({ isOpen, onClose }: ChatContainerProps) {
         setSessions(data.sessions || []);
       }
     } catch (error) {
-      console.error('Failed to load sessions:', error);
+      logger.error({ error }, 'Failed to load sessions');
     }
   };
 
@@ -97,7 +98,7 @@ export function ChatContainer({ isOpen, onClose }: ChatContainerProps) {
         setMessages(loadedMessages);
       }
     } catch (error) {
-      console.error('Failed to load messages:', error);
+      logger.error({ error }, 'Failed to load messages');
     } finally {
       setIsLoadingSession(false);
     }
@@ -115,7 +116,7 @@ export function ChatContainer({ isOpen, onClose }: ChatContainerProps) {
         await loadSessions();
       }
     } catch (error) {
-      console.error('Failed to delete session:', error);
+      logger.error({ error }, 'Failed to delete session');
     }
   };
 
@@ -197,7 +198,7 @@ export function ChatContainer({ isOpen, onClose }: ChatContainerProps) {
                   })
                 );
               } else if (data.type === 'error') {
-                console.error('Stream error:', data.error);
+                logger.error({ error: data.error }, 'Stream error');
                 setMessages((prev) =>
                   prev.map((msg) =>
                     msg.id === assistantMessageId
@@ -214,9 +215,9 @@ export function ChatContainer({ isOpen, onClose }: ChatContainerProps) {
       }
     } catch (error: unknown) {
       if (error instanceof Error && error.name === 'AbortError') {
-        console.log('Request aborted');
+        logger.info('Request aborted');
       } else {
-        console.error('Error sending message:', error);
+        logger.error({ error }, 'Error sending message');
       }
     } finally {
       setIsLoading(false);

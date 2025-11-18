@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 export default function GlobalError({
   error,
@@ -11,27 +12,20 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error(error);
+    logger.error({ error }, 'Global error boundary triggered');
   }, [error]);
 
   return (
     <html>
       <body>
-        <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: '3rem', fontWeight: 'bold' }}>500</h1>
-            <p style={{ marginTop: '1rem', fontSize: '1.25rem' }}>Something went wrong</p>
-            <div style={{ marginTop: '2rem' }}>
+        <div className="flex min-h-screen flex-col items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-5xl font-bold">500</h1>
+            <p className="mt-4 text-xl">Something went wrong</p>
+            <div className="mt-8">
               <button
                 onClick={() => reset()}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#000',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '0.375rem',
-                  cursor: 'pointer'
-                }}
+                className="px-4 py-2 bg-black text-white border-none rounded-md cursor-pointer hover:opacity-90"
               >
                 Try again
               </button>

@@ -1,5 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck - Duplicate exports from multiple modules
 /**
  * Communication Modules
  *
@@ -17,25 +15,32 @@
  * - Intercom (Customer Messaging)
  */
 
-export * from './email';
-// @ts-ignore - slack exports addReaction and sendText which may conflict
-export * from './slack';
-// @ts-ignore - discord exports sendMessage which may conflict
-export * from './discord';
-export * from './telegram';
-// @ts-ignore - twilio exports MessageStatus and getMessageStatus which may conflict
-export * from './twilio';
-// @ts-ignore - whatsapp exports SendMessageOptions which may conflict
-export * from './whatsapp';
-// @ts-ignore - onesignal exports multiple types that may conflict
-export * from './onesignal';
-export * from './firebase';
-// @ts-ignore - zendesk exports multiple types that may conflict
-export * from './zendesk';
-// @ts-ignore - freshdesk exports multiple types that may conflict
-export * from './freshdesk';
-export * from './intercom';
-// @ts-ignore - mailchimp exports multiple types that may conflict
-export * from './mailchimp';
-// @ts-ignore - microsoft-teams exports multiple types that may conflict
-export * from './microsoft-teams';
+import * as email from './email';
+import * as slack from './slack';
+import * as discord from './discord';
+import * as telegram from './telegram';
+import * as twilio from './twilio';
+import * as whatsapp from './whatsapp';
+import * as onesignal from './onesignal';
+import * as firebase from './firebase';
+import * as zendesk from './zendesk';
+import * as freshdesk from './freshdesk';
+import * as intercom from './intercom';
+import * as mailchimp from './mailchimp';
+import * as microsoftTeams from './microsoft-teams';
+
+export {
+  email,
+  slack,
+  discord,
+  telegram,
+  twilio,
+  whatsapp,
+  onesignal,
+  firebase,
+  zendesk,
+  freshdesk,
+  intercom,
+  mailchimp,
+  microsoftTeams
+};

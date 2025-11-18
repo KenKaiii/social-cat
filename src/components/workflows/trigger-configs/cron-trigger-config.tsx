@@ -2,13 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { ChevronsUpDown, Check } from 'lucide-react';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface CronTriggerConfigProps {
   initialConfig?: Record<string, unknown>;
@@ -69,6 +75,9 @@ export function CronTriggerConfig({ initialConfig, onConfigChange }: CronTrigger
     (initialConfig?.timezone as string) || 'UTC'
   );
 
+  const [presetOpen, setPresetOpen] = useState(false);
+  const [timezoneOpen, setTimezoneOpen] = useState(false);
+
   useEffect(() => {
     const preset = cronPresets.find((p) => p.value === selectedPreset);
     if (preset) {
@@ -95,74 +104,148 @@ export function CronTriggerConfig({ initialConfig, onConfigChange }: CronTrigger
         <Label htmlFor="cron-preset" className="text-sm font-medium">
           Schedule Frequency
         </Label>
-        <Select value={selectedPreset} onValueChange={handlePresetChange}>
-          <SelectTrigger id="cron-preset" className="text-sm">
-            <SelectValue placeholder="Select schedule" />
-          </SelectTrigger>
-          <SelectContent>
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-              Frequent
-            </div>
-            {cronPresets.slice(0, 5).map((p) => (
-              <SelectItem key={p.value} value={p.value} className="text-sm">
-                {p.label}
-              </SelectItem>
-            ))}
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1">
-              Daily
-            </div>
-            {cronPresets.slice(5, 10).map((p) => (
-              <SelectItem key={p.value} value={p.value} className="text-sm">
-                {p.label}
-              </SelectItem>
-            ))}
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1">
-              Weekly & Monthly
-            </div>
-            {cronPresets.slice(10).map((p) => (
-              <SelectItem key={p.value} value={p.value} className="text-sm">
-                {p.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={presetOpen} onOpenChange={setPresetOpen} modal={true}>
+          <PopoverTrigger asChild>
+            <Button
+              id="cron-preset"
+              variant="outline"
+              role="combobox"
+              aria-expanded={presetOpen}
+              className="w-full justify-between font-normal text-sm"
+            >
+              {currentPreset ? currentPreset.label : 'Select schedule'}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+            <Command>
+              <CommandList className="max-h-[300px]">
+                <CommandGroup heading="Frequent">
+                  {cronPresets.slice(0, 5).map((p) => (
+                    <CommandItem
+                      key={p.value}
+                      value={p.value}
+                      onSelect={() => {
+                        handlePresetChange(p.value);
+                        setPresetOpen(false);
+                      }}
+                      className="text-sm"
+                    >
+                      <Check className={`mr-2 h-4 w-4 ${selectedPreset === p.value ? 'opacity-100' : 'opacity-0'}`} />
+                      {p.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+                <CommandGroup heading="Daily">
+                  {cronPresets.slice(5, 10).map((p) => (
+                    <CommandItem
+                      key={p.value}
+                      value={p.value}
+                      onSelect={() => {
+                        handlePresetChange(p.value);
+                        setPresetOpen(false);
+                      }}
+                      className="text-sm"
+                    >
+                      <Check className={`mr-2 h-4 w-4 ${selectedPreset === p.value ? 'opacity-100' : 'opacity-0'}`} />
+                      {p.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+                <CommandGroup heading="Weekly & Monthly">
+                  {cronPresets.slice(10).map((p) => (
+                    <CommandItem
+                      key={p.value}
+                      value={p.value}
+                      onSelect={() => {
+                        handlePresetChange(p.value);
+                        setPresetOpen(false);
+                      }}
+                      className="text-sm"
+                    >
+                      <Check className={`mr-2 h-4 w-4 ${selectedPreset === p.value ? 'opacity-100' : 'opacity-0'}`} />
+                      {p.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="timezone" className="text-sm font-medium">
           Timezone
         </Label>
-        <Select value={selectedTimezone} onValueChange={handleTimezoneChange}>
-          <SelectTrigger id="timezone" className="text-sm">
-            <SelectValue placeholder="Select timezone" />
-          </SelectTrigger>
-          <SelectContent className="max-h-[300px]">
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-              US & Canada
-            </div>
-            {timezones.slice(0, 6).map((tz) => (
-              <SelectItem key={tz.value} value={tz.value} className="text-sm">
-                {tz.label}
-              </SelectItem>
-            ))}
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1">
-              Europe
-            </div>
-            {timezones.slice(6, 11).map((tz) => (
-              <SelectItem key={tz.value} value={tz.value} className="text-sm">
-                {tz.label}
-              </SelectItem>
-            ))}
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-t mt-1">
-              Asia & Pacific
-            </div>
-            {timezones.slice(11).map((tz) => (
-              <SelectItem key={tz.value} value={tz.value} className="text-sm">
-                {tz.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={timezoneOpen} onOpenChange={setTimezoneOpen} modal={true}>
+          <PopoverTrigger asChild>
+            <Button
+              id="timezone"
+              variant="outline"
+              role="combobox"
+              aria-expanded={timezoneOpen}
+              className="w-full justify-between font-normal text-sm"
+            >
+              {timezones.find(tz => tz.value === selectedTimezone)?.label || 'Select timezone'}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0 max-h-[300px]" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+            <Command>
+              <CommandList className="max-h-[300px]">
+                <CommandGroup heading="US & Canada">
+                  {timezones.slice(0, 6).map((tz) => (
+                    <CommandItem
+                      key={tz.value}
+                      value={tz.value}
+                      onSelect={() => {
+                        handleTimezoneChange(tz.value);
+                        setTimezoneOpen(false);
+                      }}
+                      className="text-sm"
+                    >
+                      <Check className={`mr-2 h-4 w-4 ${selectedTimezone === tz.value ? 'opacity-100' : 'opacity-0'}`} />
+                      {tz.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+                <CommandGroup heading="Europe">
+                  {timezones.slice(6, 11).map((tz) => (
+                    <CommandItem
+                      key={tz.value}
+                      value={tz.value}
+                      onSelect={() => {
+                        handleTimezoneChange(tz.value);
+                        setTimezoneOpen(false);
+                      }}
+                      className="text-sm"
+                    >
+                      <Check className={`mr-2 h-4 w-4 ${selectedTimezone === tz.value ? 'opacity-100' : 'opacity-0'}`} />
+                      {tz.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+                <CommandGroup heading="Asia & Pacific">
+                  {timezones.slice(11).map((tz) => (
+                    <CommandItem
+                      key={tz.value}
+                      value={tz.value}
+                      onSelect={() => {
+                        handleTimezoneChange(tz.value);
+                        setTimezoneOpen(false);
+                      }}
+                      className="text-sm"
+                    >
+                      <Check className={`mr-2 h-4 w-4 ${selectedTimezone === tz.value ? 'opacity-100' : 'opacity-0'}`} />
+                      {tz.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="rounded-md border border-border/50 bg-muted/30 px-3 py-2.5">

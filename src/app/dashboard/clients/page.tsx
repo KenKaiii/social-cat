@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, lazy, Suspense } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,14 +14,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Building2, Plus, Trash2, Pencil, UserPlus, Users, CheckCircle2, Search } from 'lucide-react';
+import { Building2, Plus, Trash2, Pencil, UserPlus, Users, CheckCircle2, Search, ChevronsUpDown, Check } from 'lucide-react';
 import { useClient, type Client } from '@/components/providers/ClientProvider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ClientMembersDialog } from '@/components/clients/client-members-dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { logger } from '@/lib/logger';
+
+// Lazy load heavy components
+const ClientMembersDialog = lazy(() => import('@/components/clients/client-members-dialog').then(mod => ({ default: mod.ClientMembersDialog })));
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 const getStatusBadgeVariant = (status: string): 'gradient-success' | 'outline' => {
   return status === 'active' ? 'gradient-success' : 'outline';
@@ -41,6 +54,7 @@ export default function ClientsPage() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilterOpen, setStatusFilterOpen] = useState(false);
 
   const handleCreateClient = async () => {
     if (!newClientName.trim()) {
@@ -67,7 +81,7 @@ export default function ClientsPage() {
         toast.error(error.error || 'Failed to create client');
       }
     } catch (error) {
-      console.error('Failed to create client:', error);
+      logger.error({ error }, 'Failed to create client');
       toast.error('An error occurred');
     } finally {
       setIsCreating(false);
@@ -105,7 +119,7 @@ export default function ClientsPage() {
         toast.error(error.error || 'Failed to update client');
       }
     } catch (error) {
-      console.error('Failed to update client:', error);
+      logger.error({ error }, 'Failed to update client');
       toast.error('An error occurred');
     } finally {
       setIsSaving(false);
@@ -130,7 +144,7 @@ export default function ClientsPage() {
       toast.success(`Client ${checked ? 'activated' : 'deactivated'}`);
       await refetchClients();
     } catch (error) {
-      console.error('Error updating client status:', error);
+      logger.error({ error }, 'Error updating client status');
       toast.error('Failed to update client status');
     } finally {
       setTogglingStatus((prev) => ({ ...prev, [clientId]: false }));
@@ -156,7 +170,7 @@ export default function ClientsPage() {
               toast.error(error.error || 'Failed to delete client');
             }
           } catch (error) {
-            console.error('Failed to delete client:', error);
+            logger.error({ error }, 'Failed to delete client');
             toast.error('An error occurred');
           }
         },
@@ -266,21 +280,62 @@ export default function ClientsPage() {
                 />
               </div>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="All statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
+              <Popover open={statusFilterOpen} onOpenChange={setStatusFilterOpen} modal={true}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={statusFilterOpen}
+                    className="w-[140px] justify-between font-normal"
+                  >
+                    {statusFilter === 'all' ? 'All statuses' : statusFilter === 'active' ? 'Active' : 'Inactive'}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[140px] p-0" align="start">
+                  <Command>
+                    <CommandList className="max-h-[300px]">
+                      <CommandGroup>
+                        <CommandItem
+                          value="all"
+                          onSelect={() => {
+                            setStatusFilter('all');
+                            setStatusFilterOpen(false);
+                          }}
+                        >
+                          <Check className={`mr-2 h-4 w-4 ${statusFilter === 'all' ? 'opacity-100' : 'opacity-0'}`} />
+                          All statuses
+                        </CommandItem>
+                        <CommandItem
+                          value="active"
+                          onSelect={() => {
+                            setStatusFilter('active');
+                            setStatusFilterOpen(false);
+                          }}
+                        >
+                          <Check className={`mr-2 h-4 w-4 ${statusFilter === 'active' ? 'opacity-100' : 'opacity-0'}`} />
+                          Active
+                        </CommandItem>
+                        <CommandItem
+                          value="inactive"
+                          onSelect={() => {
+                            setStatusFilter('inactive');
+                            setStatusFilterOpen(false);
+                          }}
+                        >
+                          <Check className={`mr-2 h-4 w-4 ${statusFilter === 'inactive' ? 'opacity-100' : 'opacity-0'}`} />
+                          Inactive
+                        </CommandItem>
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 group">
+                <Button variant="default" className="group">
                   <Plus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:rotate-90" />
                   Add Client
                 </Button>
@@ -331,7 +386,7 @@ export default function ClientsPage() {
           <div className="flex justify-end">
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95 group">
+                <Button variant="default" className="group">
                   <Plus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:rotate-90" />
                   Add Client
                 </Button>
@@ -599,12 +654,14 @@ export default function ClientsPage() {
 
         {/* Members Dialog */}
         {selectedClient && (
-          <ClientMembersDialog
-            clientId={selectedClient.id}
-            clientName={selectedClient.name}
-            open={membersDialogOpen}
-            onOpenChange={setMembersDialogOpen}
-          />
+          <Suspense fallback={null}>
+            <ClientMembersDialog
+              clientId={selectedClient.id}
+              clientName={selectedClient.name}
+              open={membersDialogOpen}
+              onOpenChange={setMembersDialogOpen}
+            />
+          </Suspense>
         )}
       </div>
     </DashboardLayout>

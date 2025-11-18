@@ -108,8 +108,12 @@ export async function GET(
       try {
         const parsed = JSON.parse(triggerDataParam);
         triggerData = triggerDataSchema.parse(parsed);
-      } catch {
-        return new Response(JSON.stringify({ error: 'Invalid trigger data format' }), {
+      } catch (error) {
+        const details = error instanceof Error ? error.message : 'Unknown error';
+        return new Response(JSON.stringify({
+          error: 'Invalid trigger data format',
+          details
+        }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
         });

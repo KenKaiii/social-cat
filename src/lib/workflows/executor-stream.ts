@@ -817,6 +817,7 @@ async function loadUserCredentials(userId: string): Promise<Record<string, strin
     const platformAliases: Record<string, string[]> = {
       'youtube': ['youtube_apikey', 'youtube_api_key', 'youtube'],
       'twitter': ['twitter_oauth2', 'twitter_oauth', 'twitter'],
+      'twitter-oauth': ['twitter_oauth2', 'twitter_oauth', 'twitter'], // Module name: social.twitter-oauth
       'github': ['github_oauth', 'github'],
       'google-sheets': ['googlesheets', 'googlesheets_oauth'],
       'googlesheets': ['googlesheets', 'googlesheets_oauth'],

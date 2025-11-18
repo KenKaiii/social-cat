@@ -98,9 +98,6 @@ Examples: news articles, documentation pages, blog posts, product pages.`,
   },
 };
 
-// TODO: Implement when serper module is available
-// export const searchWebTool: Tool = { ... };
-
 // ============================================================================
 // AI & GENERATION TOOLS
 // ============================================================================
@@ -158,15 +155,9 @@ Supports any OpenAI or Anthropic model with configurable temperature and max tok
   },
 };
 
-// TODO: Implement when DALL-E module is available
-// export const generateImageTool: Tool = { ... };
-
 // ============================================================================
 // COMMUNICATION TOOLS
 // ============================================================================
-
-// TODO: Implement when Resend module is available
-// export const sendEmailTool: Tool = { ... };
 
 // ============================================================================
 // DATA & UTILITIES TOOLS

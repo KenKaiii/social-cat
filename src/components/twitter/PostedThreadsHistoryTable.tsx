@@ -24,6 +24,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowUpDown, ChevronLeft, ChevronRight, ExternalLink, FileText } from 'lucide-react';
 import { LoadingState } from '@/components/ui/empty-state';
+import { logger } from '@/lib/logger';
+import { formatDate } from '@/lib/format-utils';
 
 interface PostedThread {
   id: number;
@@ -33,18 +35,6 @@ interface PostedThread {
   postedAt: Date | number | null;
   createdAt: Date | number | null;
 }
-
-const formatDate = (date: Date | number | null): string => {
-  if (!date) return 'N/A';
-  const d = typeof date === 'number' ? new Date(date * 1000) : new Date(date);
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
 
 export function PostedThreadsHistoryTable() {
   const [data, setData] = useState<PostedThread[]>([]);
@@ -66,7 +56,7 @@ export function PostedThreadsHistoryTable() {
         setData(result.threads);
       }
     } catch (error) {
-      console.error('Failed to fetch threads:', error);
+      logger.error({ error }, 'Failed to fetch threads');
     } finally {
       setLoading(false);
     }

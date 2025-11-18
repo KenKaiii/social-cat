@@ -60,7 +60,7 @@ export function Sidebar({
         </div>
 
         {/* Sessions List */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex-1 overflow-y-auto px-4 pb-4 scrollbar-none">
           <div className="space-y-1">
             {sessions.map((session) => (
               <div

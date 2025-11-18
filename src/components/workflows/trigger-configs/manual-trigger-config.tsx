@@ -3,13 +3,19 @@
 import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Check, ChevronsUpDown } from 'lucide-react';
 
 interface ManualTriggerConfigProps {
   onConfigChange: (config: Record<string, unknown>) => void;
@@ -19,6 +25,7 @@ export function ManualTriggerConfig({ onConfigChange }: ManualTriggerConfigProps
   const [prompt, setPrompt] = useState('');
   const [model, setModel] = useState('gpt-4');
   const [customParams, setCustomParams] = useState('{}');
+  const [modelOpen, setModelOpen] = useState(false);
 
   const handleChange = () => {
     let params = {};
@@ -66,24 +73,42 @@ export function ManualTriggerConfig({ onConfigChange }: ManualTriggerConfigProps
 
       <div className="space-y-2">
         <Label htmlFor="model">LLM Model</Label>
-        <Select
-          value={model}
-          onValueChange={(value) => {
-            setModel(value);
-            handleChange();
-          }}
-        >
-          <SelectTrigger id="model">
-            <SelectValue placeholder="Select model" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableModels.map((m) => (
-              <SelectItem key={m.value} value={m.value}>
-                {m.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={modelOpen} onOpenChange={setModelOpen} modal={true}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={modelOpen}
+              className="w-full justify-between font-normal text-sm"
+            >
+              {availableModels.find((m) => m.value === model)?.label || 'Select model'}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+            <Command>
+              <CommandList className="max-h-[300px]">
+                <CommandGroup>
+                  {availableModels.map((m) => (
+                    <CommandItem
+                      key={m.value}
+                      value={m.value}
+                      onSelect={() => {
+                        setModel(m.value);
+                        setModelOpen(false);
+                        handleChange();
+                      }}
+                      className="text-sm"
+                    >
+                      <Check className={`mr-2 h-4 w-4 ${model === m.value ? 'opacity-100' : 'opacity-0'}`} />
+                      {m.label}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
         <p className="text-xs text-muted-foreground">
           Use <code className="text-xs bg-muted px-1 py-0.5 rounded">{'{{trigger.model}}'}</code> in workflow steps
         </p>

@@ -24,6 +24,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Heart, Repeat2, MessageCircle, Eye, ArrowUpDown, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { NoRepliesState, LoadingState } from '@/components/ui/empty-state';
+import { logger } from '@/lib/logger';
+import { formatDate, formatNumber } from '@/lib/format-utils';
 
 interface TweetReply {
   id: number;
@@ -46,24 +48,6 @@ interface TweetReply {
   repliedAt: Date | number | null;
 }
 
-const formatDate = (date: Date | number | null): string => {
-  if (!date) return 'N/A';
-  const d = typeof date === 'number' ? new Date(date * 1000) : new Date(date);
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
-const formatNumber = (num: number): string => {
-  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-  return num.toString();
-};
-
 export function ReplyHistoryTable() {
   const [data, setData] = useState<TweetReply[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +68,7 @@ export function ReplyHistoryTable() {
         setData(result.replies);
       }
     } catch (error) {
-      console.error('Failed to fetch replies:', error);
+      logger.error({ error }, 'Failed to fetch replies');
     } finally {
       setLoading(false);
     }
@@ -147,7 +131,7 @@ export function ReplyHistoryTable() {
       cell: ({ row }) => {
         return (
           <div className="text-xs text-secondary text-center">
-            {formatNumber(row.original.originalTweet.likes)}
+            {formatNumber(row.original.originalTweet.likes, '0')}
           </div>
         );
       },
@@ -170,7 +154,7 @@ export function ReplyHistoryTable() {
       cell: ({ row }) => {
         return (
           <div className="text-xs text-secondary text-center">
-            {formatNumber(row.original.originalTweet.retweets)}
+            {formatNumber(row.original.originalTweet.retweets, '0')}
           </div>
         );
       },
@@ -193,7 +177,7 @@ export function ReplyHistoryTable() {
       cell: ({ row }) => {
         return (
           <div className="text-xs text-secondary text-center">
-            {formatNumber(row.original.originalTweet.replies)}
+            {formatNumber(row.original.originalTweet.replies, '0')}
           </div>
         );
       },
@@ -216,7 +200,7 @@ export function ReplyHistoryTable() {
       cell: ({ row }) => {
         return (
           <div className="text-xs text-secondary text-center">
-            {formatNumber(row.original.originalTweet.views)}
+            {formatNumber(row.original.originalTweet.views, '0')}
           </div>
         );
       },

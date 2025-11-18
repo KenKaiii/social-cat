@@ -4,8 +4,18 @@ import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, GripVertical } from 'lucide-react';
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Plus, Trash2, GripVertical, Check, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 
 export interface InputField {
@@ -37,6 +47,7 @@ export function ChatInputTriggerConfig({ initialConfig, onConfigChange }: ChatIn
       },
     ]
   );
+  const [openFields, setOpenFields] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     onConfigChange({ fields });
@@ -97,7 +108,7 @@ export function ChatInputTriggerConfig({ initialConfig, onConfigChange }: ChatIn
         </p>
       </div>
 
-      <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+      <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 scrollbar-none">
         {fields.map((field, index) => (
           <div
             key={field.id}
@@ -157,23 +168,41 @@ export function ChatInputTriggerConfig({ initialConfig, onConfigChange }: ChatIn
                 <Label htmlFor={`type-${field.id}`} className="text-xs">
                   Type
                 </Label>
-                <Select
-                  value={field.type}
-                  onValueChange={(value: InputField['type']) =>
-                    updateField(field.id, { type: value })
-                  }
-                >
-                  <SelectTrigger id={`type-${field.id}`} className="h-8 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fieldTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={openFields[field.id]} onOpenChange={(open) => setOpenFields({ ...openFields, [field.id]: open })} modal={true}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={openFields[field.id]}
+                      className="w-full justify-between font-normal h-8 text-sm"
+                    >
+                      {fieldTypes.find((type) => type.value === field.type)?.label || 'Select type'}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+                    <Command>
+                      <CommandList className="max-h-[300px]">
+                        <CommandGroup>
+                          {fieldTypes.map((type) => (
+                            <CommandItem
+                              key={type.value}
+                              value={type.value}
+                              onSelect={() => {
+                                updateField(field.id, { type: type.value as InputField['type'] });
+                                setOpenFields({ ...openFields, [field.id]: false });
+                              }}
+                              className="text-sm"
+                            >
+                              <Check className={`mr-2 h-4 w-4 ${field.type === type.value ? 'opacity-100' : 'opacity-0'}`} />
+                              {type.label}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="space-y-1.5">

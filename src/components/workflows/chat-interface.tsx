@@ -10,6 +10,7 @@ import { Send, User, Bot, Loader2, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 // Animation constants to avoid creating new objects on each render
 const MESSAGE_ANIMATION_INITIAL = { opacity: 0, y: 10 };
@@ -107,7 +108,7 @@ export function ChatInterface({
           }
         })
         .catch((error) => {
-          console.error('Failed to load conversation history:', error);
+          logger.error({ error }, 'Failed to load conversation history');
         })
         .finally(() => {
           setIsLoadingHistory(false);

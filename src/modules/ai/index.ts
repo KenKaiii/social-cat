@@ -1,5 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck - Duplicate exports from multiple modules
 /**
  * AI Modules
  *
@@ -13,27 +11,40 @@
  */
 
 // Language Models - Unified AI SDK (OpenAI + Anthropic)
-export * from './ai-sdk';
-export * from './ai-agent';
-export * from './ai-agent-stream';
-export * from './ai-tools';
-export * from './cohere';
+import * as aiSdk from './ai-sdk';
+import * as aiAgent from './ai-agent';
+import * as aiAgentStream from './ai-agent-stream';
+import * as aiTools from './ai-tools';
+import * as cohere from './cohere';
 
 // Vector Databases
-export * from './pinecone';
-export * from './chroma';
-export * from './weaviate';
+import * as pinecone from './pinecone';
+import * as chroma from './chroma';
+import * as weaviate from './weaviate';
 
 // Image Generation
-// @ts-ignore - stabilityai exports removeBackground which conflicts with replicate-video
-export * from './stabilityai';
+import * as stabilityai from './stabilityai';
 
 // Video Generation
-// @ts-ignore - runway-video and replicate-video both export generateVideo and listGenerations
-export * from './runway-video';
-// @ts-ignore - conflicts resolved by module namespace usage
-export * from './replicate-video';
+import * as runwayVideo from './runway-video';
+import * as replicateVideo from './replicate-video';
 
 // Music Generation
-export * from './suno';
-export * from './mubert';
+import * as suno from './suno';
+import * as mubert from './mubert';
+
+export {
+  aiSdk,
+  aiAgent,
+  aiAgentStream,
+  aiTools,
+  cohere,
+  pinecone,
+  chroma,
+  weaviate,
+  stabilityai,
+  runwayVideo,
+  replicateVideo,
+  suno,
+  mubert
+};

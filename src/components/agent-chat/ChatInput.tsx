@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Send, Square } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface SlashCommand {
   name: string;
@@ -37,7 +38,7 @@ export function ChatInput({
     fetch('/api/agent-chat/commands')
       .then((res) => res.json())
       .then((data) => setAvailableCommands(data.commands || []))
-      .catch((err) => console.error('Failed to load commands:', err));
+      .catch((err) => logger.error({ error: err }, 'Failed to load commands'));
   }, []);
 
   // Detect "/" for command autocomplete
@@ -118,7 +119,7 @@ export function ChatInput({
         {/* Command autocomplete menu */}
         {showCommandMenu && filteredCommands.length > 0 && (
           <div className="mb-2 w-full bg-card border border-border rounded-md shadow-lg overflow-hidden">
-            <div className="max-h-[240px] overflow-y-auto py-1" style={{ scrollbarWidth: 'none' }}>
+            <div className="max-h-[240px] overflow-y-auto py-1 scrollbar-none">
               {filteredCommands.map((cmd, index) => (
                 <button
                   key={cmd.name}
@@ -154,12 +155,7 @@ export function ChatInput({
               onKeyDown={handleKeyDown}
               placeholder="Type your message... (Shift+Enter for new line)"
               disabled={disabled}
-              className="w-full bg-transparent text-foreground text-14 px-4 py-3 resize-none outline-none placeholder:text-muted-foreground"
-              style={{
-                minHeight: '60px',
-                maxHeight: '200px',
-                scrollbarWidth: 'none',
-              }}
+              className="w-full bg-transparent text-foreground text-14 px-4 py-3 resize-none outline-none placeholder:text-muted-foreground scrollbar-none min-h-[60px] max-h-[200px]"
             />
           </div>
 

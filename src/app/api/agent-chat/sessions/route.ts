@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { agentChatSessionsTable, agentChatMessagesTable } from '@/lib/schema';
 import { eq, desc } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,7 +23,7 @@ export async function GET() {
 
     return Response.json({ sessions });
   } catch (error) {
-    console.error('Error fetching sessions:', error);
+    logger.error({ error }, 'Error fetching sessions');
     return new Response('Internal server error', { status: 500 });
   }
 }
@@ -54,7 +55,7 @@ export async function DELETE(request: Request) {
 
     return Response.json({ success: true });
   } catch (error) {
-    console.error('Error deleting session:', error);
+    logger.error({ error }, 'Error deleting session');
     return new Response('Internal server error', { status: 500 });
   }
 }

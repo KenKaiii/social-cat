@@ -2,6 +2,7 @@ import { getAgentWorkspaceDir } from '@/lib/agent-workspace';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { execSync } from 'child_process';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -111,7 +112,7 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
   } catch (error) {
-    console.error('Build from plan error:', error);
+    logger.error({ error }, 'Build from plan error');
     return new Response('Internal server error', { status: 500 });
   }
 }

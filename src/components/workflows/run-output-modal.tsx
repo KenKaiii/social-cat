@@ -12,6 +12,7 @@ import { OutputRenderer } from './output-renderer';
 import { OutputDisplayConfig } from '@/lib/workflows/analyze-output-display';
 import { useState, useEffect } from 'react';
 import { ChatInterface } from './chat-interface';
+import { logger } from '@/lib/logger';
 
 interface WorkflowRun {
   id: string;
@@ -75,7 +76,7 @@ export function RunOutputModal({
           setWorkflowName(data.workflow?.name || '');
         })
         .catch((error) => {
-          console.error('Failed to load conversations:', error);
+          logger.error({ error }, 'Failed to load conversations');
         })
         .finally(() => {
           setLoadingConversations(false);
@@ -97,7 +98,7 @@ export function RunOutputModal({
     try {
       parsedConfig = JSON.parse(workflowConfig);
     } catch (error) {
-      console.error('Failed to parse workflowConfig:', error);
+      logger.error({ error }, 'Failed to parse workflowConfig');
       parsedConfig = undefined;
     }
   }
@@ -135,7 +136,7 @@ export function RunOutputModal({
           // Path not found - this is expected when executor already extracted the value
           // Only warn if the output doesn't look like it was already extracted
           if (value === run?.output && typeof value === 'object' && !Array.isArray(value)) {
-            console.warn(`[RunOutputModal] returnValue path "${path}" not found in output, using full output`);
+            logger.warn({ path, returnValue, outputType: typeof value }, 'RunOutputModal: returnValue path not found in output, using full output');
           }
           value = run?.output;
           break;
@@ -146,14 +147,14 @@ export function RunOutputModal({
     }
   } else if (returnValue && run?.output && Array.isArray(run.output)) {
     // run.output is already the extracted array (new behavior after executor fix)
-    console.log(`[RunOutputModal] returnValue configured and run.output is already extracted array[${run.output.length}]`);
+    logger.debug({ returnValue, outputLength: run.output.length }, 'RunOutputModal: returnValue configured and run.output is already extracted array');
     processedOutput = run.output;
   } else if (returnValue && run?.output) {
     // Only log if there's actual output but it couldn't be applied
-    console.log(`[RunOutputModal] returnValue configured but not applied:`, { returnValue, hasOutput: !!run?.output, isObject: typeof run?.output === 'object' });
+    logger.debug({ returnValue, hasOutput: !!run?.output, isObject: typeof run?.output === 'object' }, 'RunOutputModal: returnValue configured but not applied');
   } else if (!returnValue && run?.output && typeof run.output === 'object' && !Array.isArray(run.output)) {
     // No returnValue specified - auto-filter internal variables
-    console.log('[RunOutputModal] No returnValue - applying auto-detection filter');
+    logger.debug({}, 'RunOutputModal: No returnValue - applying auto-detection filter');
     const internalKeys = ['user', 'trigger'];
     const filteredOutput: Record<string, unknown> = {};
 
@@ -170,7 +171,7 @@ export function RunOutputModal({
 
     // If we have filtered variables, use them; otherwise use original (backward compat)
     if (Object.keys(filteredOutput).length > 0) {
-      console.log('[RunOutputModal] Filtered output keys:', Object.keys(filteredOutput));
+      logger.debug({ filteredKeys: Object.keys(filteredOutput) }, 'RunOutputModal: Filtered output keys');
       processedOutput = filteredOutput;
     }
   }
@@ -191,7 +192,7 @@ export function RunOutputModal({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className={isChatWorkflow ? "sm:max-w-2xl max-h-[85vh] flex flex-col" : "!max-w-[98vw] !w-[98vw] max-h-[95vh] overflow-auto p-6 pt-12"}
+          className={isChatWorkflow ? "sm:max-w-2xl max-h-[85vh] flex flex-col" : "!max-w-[98vw] !w-[98vw] max-h-[95vh] overflow-auto scrollbar-none p-6 pt-12"}
           showCloseButton={!hasOutput}
         >
           {isChatWorkflow ? (
@@ -224,7 +225,7 @@ export function RunOutputModal({
                 </p>
               </div>
             ) : (
-              <div className="flex-1 overflow-y-auto -mx-6 px-6">
+              <div className="flex-1 overflow-y-auto -mx-6 px-6 scrollbar-none">
                 <div className="relative overflow-hidden rounded-lg border-0 bg-gradient-to-br from-primary/5 via-blue-500/3 to-primary/5 backdrop-blur-sm shadow-sm">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-blue-400 to-primary opacity-80" />
                   <table className="w-full mt-1">

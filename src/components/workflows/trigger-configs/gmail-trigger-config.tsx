@@ -3,13 +3,19 @@
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { ChevronsUpDown, Check } from 'lucide-react';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface GmailTriggerConfigProps {
   initialConfig?: Record<string, unknown>;
@@ -28,6 +34,8 @@ export function GmailTriggerConfig({ initialConfig, onConfigChange }: GmailTrigg
   const [pollInterval, setPollInterval] = useState(
     (initialConfig?.pollInterval as number) || 60
   );
+  const [labelOpen, setLabelOpen] = useState(false);
+  const [intervalOpen, setIntervalOpen] = useState(false);
 
   useEffect(() => {
     const filters: Record<string, unknown> = {};
@@ -75,18 +83,42 @@ export function GmailTriggerConfig({ initialConfig, onConfigChange }: GmailTrigg
 
         <div className="space-y-2">
           <Label htmlFor="gmail-label" className="text-sm">Gmail Label</Label>
-          <Select value={label} onValueChange={setLabel}>
-            <SelectTrigger id="gmail-label" className="text-sm">
-              <SelectValue placeholder="Select label" />
-            </SelectTrigger>
-            <SelectContent>
-              {commonLabels.map((l) => (
-                <SelectItem key={l.value} value={l.value} className="text-sm">
-                  {l.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={labelOpen} onOpenChange={setLabelOpen} modal={true}>
+            <PopoverTrigger asChild>
+              <Button
+                id="gmail-label"
+                variant="outline"
+                role="combobox"
+                aria-expanded={labelOpen}
+                className="w-full justify-between font-normal text-sm"
+              >
+                {commonLabels.find(l => l.value === label)?.label || 'Select label'}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+              <Command>
+                <CommandList className="max-h-[300px]">
+                  <CommandGroup>
+                    {commonLabels.map((l) => (
+                      <CommandItem
+                        key={l.value}
+                        value={l.value}
+                        onSelect={() => {
+                          setLabel(l.value);
+                          setLabelOpen(false);
+                        }}
+                        className="text-sm"
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${label === l.value ? 'opacity-100' : 'opacity-0'}`} />
+                        {l.label}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-3">
@@ -162,25 +194,42 @@ export function GmailTriggerConfig({ initialConfig, onConfigChange }: GmailTrigg
 
         <div className="space-y-2">
           <Label htmlFor="gmail-interval" className="text-sm">Check for new emails</Label>
-          <Select
-            value={pollInterval.toString()}
-            onValueChange={(value) => setPollInterval(parseInt(value, 10))}
-          >
-            <SelectTrigger id="gmail-interval" className="text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {pollIntervals.map((interval) => (
-                <SelectItem
-                  key={interval.value}
-                  value={interval.value.toString()}
-                  className="text-sm"
-                >
-                  {interval.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={intervalOpen} onOpenChange={setIntervalOpen} modal={true}>
+            <PopoverTrigger asChild>
+              <Button
+                id="gmail-interval"
+                variant="outline"
+                role="combobox"
+                aria-expanded={intervalOpen}
+                className="w-full justify-between font-normal text-sm"
+              >
+                {pollIntervals.find(i => i.value === pollInterval)?.label || 'Select interval'}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+              <Command>
+                <CommandList className="max-h-[300px]">
+                  <CommandGroup>
+                    {pollIntervals.map((interval) => (
+                      <CommandItem
+                        key={interval.value}
+                        value={interval.value.toString()}
+                        onSelect={() => {
+                          setPollInterval(interval.value);
+                          setIntervalOpen(false);
+                        }}
+                        className="text-sm"
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${pollInterval === interval.value ? 'opacity-100' : 'opacity-0'}`} />
+                        {interval.label}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
           <p className="text-xs text-muted-foreground">
             How often to check Gmail for matching emails
           </p>

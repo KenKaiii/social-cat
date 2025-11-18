@@ -10,6 +10,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Copy, Check, ExternalLink, ChevronDown } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface DiscordTriggerConfigProps {
   initialConfig?: Record<string, unknown>;
@@ -42,7 +43,7 @@ export function DiscordTriggerConfig({ initialConfig, onConfigChange }: DiscordT
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy:', error);
+      logger.error({ error }, 'Failed to copy');
     }
   };
 

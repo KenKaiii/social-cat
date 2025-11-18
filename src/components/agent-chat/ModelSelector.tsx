@@ -68,7 +68,7 @@ export function ModelSelector({ selectedModel, onModelChange, disabled = false }
       {isOpen && (
         <div className="absolute left-0 top-full mt-2 bg-card border border-border rounded-md w-96 max-w-[calc(100vw-1rem)] z-50 shadow-lg">
           <div className="px-4 py-3 font-semibold text-14 border-b border-border">Model</div>
-          <div className="p-2 max-h-80 overflow-y-auto">
+          <div className="p-2 max-h-80 overflow-y-auto scrollbar-none">
             {AVAILABLE_MODELS.map((model) => (
               <button
                 key={model.id}

@@ -3,13 +3,19 @@
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Check, ChevronsUpDown } from 'lucide-react';
 
 interface OutlookTriggerConfigProps {
   initialConfig?: Record<string, unknown>;
@@ -28,6 +34,9 @@ export function OutlookTriggerConfig({ initialConfig, onConfigChange }: OutlookT
   const [pollInterval, setPollInterval] = useState(
     (initialConfig?.pollInterval as number) || 60
   );
+  const [folderOpen, setFolderOpen] = useState(false);
+  const [importanceOpen, setImportanceOpen] = useState(false);
+  const [intervalOpen, setIntervalOpen] = useState(false);
 
   useEffect(() => {
     const filters: Record<string, unknown> = {};
@@ -81,34 +90,80 @@ export function OutlookTriggerConfig({ initialConfig, onConfigChange }: OutlookT
 
         <div className="space-y-2">
           <Label htmlFor="outlook-folder" className="text-sm">Outlook Folder</Label>
-          <Select value={folder} onValueChange={setFolder}>
-            <SelectTrigger id="outlook-folder" className="text-sm">
-              <SelectValue placeholder="Select folder" />
-            </SelectTrigger>
-            <SelectContent>
-              {commonFolders.map((f) => (
-                <SelectItem key={f.value} value={f.value} className="text-sm">
-                  {f.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={folderOpen} onOpenChange={setFolderOpen} modal={true}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={folderOpen}
+                className="w-full justify-between font-normal text-sm"
+              >
+                {folder ? commonFolders.find((f) => f.value === folder)?.label : 'Select folder'}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+              <Command>
+                <CommandList className="max-h-[300px]">
+                  <CommandGroup>
+                    {commonFolders.map((f) => (
+                      <CommandItem
+                        key={f.value}
+                        value={f.value}
+                        onSelect={() => {
+                          setFolder(f.value);
+                          setFolderOpen(false);
+                        }}
+                        className="text-sm"
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${folder === f.value ? 'opacity-100' : 'opacity-0'}`} />
+                        {f.label}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="outlook-importance" className="text-sm">Importance Level</Label>
-          <Select value={importance} onValueChange={setImportance}>
-            <SelectTrigger id="outlook-importance" className="text-sm">
-              <SelectValue placeholder="Select importance" />
-            </SelectTrigger>
-            <SelectContent>
-              {importanceLevels.map((level) => (
-                <SelectItem key={level.value} value={level.value} className="text-sm">
-                  {level.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={importanceOpen} onOpenChange={setImportanceOpen} modal={true}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={importanceOpen}
+                className="w-full justify-between font-normal text-sm"
+              >
+                {importance ? importanceLevels.find((level) => level.value === importance)?.label : 'Select importance'}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+              <Command>
+                <CommandList className="max-h-[300px]">
+                  <CommandGroup>
+                    {importanceLevels.map((level) => (
+                      <CommandItem
+                        key={level.value}
+                        value={level.value}
+                        onSelect={() => {
+                          setImportance(level.value);
+                          setImportanceOpen(false);
+                        }}
+                        className="text-sm"
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${importance === level.value ? 'opacity-100' : 'opacity-0'}`} />
+                        {level.label}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-3">
@@ -173,25 +228,41 @@ export function OutlookTriggerConfig({ initialConfig, onConfigChange }: OutlookT
 
         <div className="space-y-2">
           <Label htmlFor="outlook-interval" className="text-sm">Check for new emails</Label>
-          <Select
-            value={pollInterval.toString()}
-            onValueChange={(value) => setPollInterval(parseInt(value, 10))}
-          >
-            <SelectTrigger id="outlook-interval" className="text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {pollIntervals.map((interval) => (
-                <SelectItem
-                  key={interval.value}
-                  value={interval.value.toString()}
-                  className="text-sm"
-                >
-                  {interval.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={intervalOpen} onOpenChange={setIntervalOpen} modal={true}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={intervalOpen}
+                className="w-full justify-between font-normal text-sm"
+              >
+                {pollIntervals.find((interval) => interval.value === pollInterval)?.label || 'Select interval'}
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+              <Command>
+                <CommandList className="max-h-[300px]">
+                  <CommandGroup>
+                    {pollIntervals.map((interval) => (
+                      <CommandItem
+                        key={interval.value}
+                        value={interval.value.toString()}
+                        onSelect={() => {
+                          setPollInterval(interval.value);
+                          setIntervalOpen(false);
+                        }}
+                        className="text-sm"
+                      >
+                        <Check className={`mr-2 h-4 w-4 ${pollInterval === interval.value ? 'opacity-100' : 'opacity-0'}`} />
+                        {interval.label}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
           <p className="text-xs text-muted-foreground">
             How often to check Outlook for matching emails
           </p>

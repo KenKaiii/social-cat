@@ -12,7 +12,6 @@
 // Publishing platforms - use named imports to avoid conflicts
 export * as medium from './medium';
 export * as ghost from './ghost';
-// export * as wordpress from './wordpress'; // Removed - legacy module with non-existent wordpressSettingsTable
 
 // Stock media platforms
 export * as unsplash from './unsplash';

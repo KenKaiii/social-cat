@@ -82,7 +82,7 @@ export function EditWriteTool({ toolName, filePath, oldString, newString, conten
 
       {/* Diff Viewer */}
       {isExpanded && (
-        <div className="max-h-[300px] overflow-auto bg-black/30">
+        <div className="max-h-[300px] overflow-auto bg-black/30 scrollbar-none">
           {/* Deleted chunk */}
           {oldString && (
             <div className="bg-red-500/10 border-l-2 border-red-500">

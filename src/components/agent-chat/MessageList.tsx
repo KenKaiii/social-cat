@@ -37,9 +37,8 @@ const MessageListComponent = ({ messages, isLoading, isLoadingSession, scrollCon
   return (
     <div
       ref={scrollContainerRef}
-      className="h-full overflow-y-auto px-5 py-8 bg-background"
+      className="h-full overflow-y-auto px-5 py-8 bg-background scrollbar-none"
       style={{
-        scrollbarWidth: 'none',
         willChange: 'scroll-position',
       }}
     >

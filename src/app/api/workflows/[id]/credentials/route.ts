@@ -130,8 +130,8 @@ export async function GET(
       'gmail': ['google'], // Gmail modules use Google OAuth
       'outlook': ['outlook'], // Outlook modules use Outlook OAuth
       'youtube': ['youtube_apikey', 'youtube'],
-      'twitter': ['twitter_oauth2', 'twitter'],
-      'twitter-oauth': ['twitter', 'twitter_oauth2'], // For social.twitter-oauth.* module paths
+      'twitter': ['twitter_oauth2', 'twitter_oauth', 'twitter'],
+      'twitter-oauth': ['twitter_oauth2', 'twitter_oauth', 'twitter'], // For social.twitter-oauth.* module paths
       'github': ['github_oauth', 'github'],
       'google-sheets': ['googlesheets', 'googlesheets_oauth'],
       'googlesheets': ['googlesheets', 'googlesheets_oauth'],

@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { StatCardSkeleton } from '@/components/ui/card-skeleton';
-import { CheckCircle2, XCircle, Play, Building2, Users, AlertCircle, Clock, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, XCircle, Play, Building2, Users } from 'lucide-react';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useClient } from '@/components/providers/ClientProvider';
 import { ProductTour } from '@/components/layout/ProductTour';
+import { logger } from '@/lib/logger';
+import { StatusIcon } from '@/components/ui/status-icon';
+import { formatDuration, formatRelativeTime } from '@/lib/format-utils';
 
 interface DashboardStats {
   automations: {
@@ -31,67 +34,11 @@ interface JobLog {
   createdAt: Date | string;
 }
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case 'success':
-      return (
-        <div className="p-1 rounded-md bg-gradient-to-br from-green-400 to-emerald-500">
-          <CheckCircle2 className="h-3 w-3 text-white" />
-        </div>
-      );
-    case 'error':
-      return (
-        <div className="p-1 rounded-md bg-gradient-to-br from-red-400 to-rose-500">
-          <AlertCircle className="h-3 w-3 text-white" />
-        </div>
-      );
-    case 'warning':
-      return (
-        <div className="p-1 rounded-md bg-gradient-to-br from-amber-400 to-yellow-500">
-          <AlertTriangle className="h-3 w-3 text-white" />
-        </div>
-      );
-    default:
-      return (
-        <div className="p-1 rounded-md bg-gradient-to-br from-blue-400 to-cyan-500">
-          <Clock className="h-3 w-3 text-white" />
-        </div>
-      );
-  }
-};
-
 const formatJobName = (name: string) => {
   return name
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
-};
-
-const formatDuration = (ms?: number | null) => {
-  if (!ms) return '—';
-  if (ms < 1000) return `${ms}ms`;
-  return `${(ms / 1000).toFixed(1)}s`;
-};
-
-const formatDate = (date: Date | string | null) => {
-  if (!date) return '—';
-  const d = typeof date === 'string' ? new Date(date) : date;
-  if (isNaN(d.getTime())) return 'Invalid date';
-
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-
-  return d.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 };
 
 export default function DashboardPage() {
@@ -113,10 +60,10 @@ export default function DashboardPage() {
           const data = await response.json();
           setStats(data);
         } else {
-          console.error('Failed to fetch stats:', response.status);
+          logger.error({ status: response.status }, 'Failed to fetch stats');
         }
       } catch (error) {
-        console.error('Failed to fetch dashboard stats:', error);
+        logger.error({ error }, 'Failed to fetch dashboard stats');
       } finally {
         setLoading(false);
       }
@@ -395,7 +342,7 @@ export default function DashboardPage() {
                       >
                         <td className="px-4 py-3.5">
                           <div className="flex items-center justify-center">
-                            {getStatusIcon(log.status)}
+                            <StatusIcon status={log.status} size="sm" />
                           </div>
                         </td>
                         <td className="px-4 py-3.5">
@@ -406,12 +353,12 @@ export default function DashboardPage() {
                         </td>
                         <td className="px-4 py-3.5">
                           <div className="text-right text-xs font-mono text-secondary">
-                            {formatDuration(log.duration)}
+                            {formatDuration(log.duration, '—')}
                           </div>
                         </td>
                         <td className="px-4 py-3.5">
                           <div className="text-right text-xs text-secondary tabular-nums">
-                            {formatDate(log.createdAt)}
+                            {formatRelativeTime(log.createdAt)}
                           </div>
                         </td>
                       </tr>

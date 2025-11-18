@@ -319,7 +319,7 @@ export async function getCredentialFields(
     .limit(1);
 
   if (credentials.length === 0) {
-    logger.warn({ userId, platform }, 'Credential not found');
+    logger.warn({ userId, platform, organizationId }, 'Credential not found');
     return null;
   }
 
@@ -329,9 +329,14 @@ export async function getCredentialFields(
   // Credentials are cached, so this was creating unnecessary write load
   // The lastUsed field is still available for manual tracking if needed
 
+  // Parse metadata if it's a string (PostgreSQL JSONB can return as string)
+  const metadata = typeof credential.metadata === 'string'
+    ? JSON.parse(credential.metadata)
+    : credential.metadata;
+
   // Check if multi-field credential
-  if (credential.metadata && typeof credential.metadata === 'object' && 'fields' in credential.metadata) {
-    const fields = credential.metadata.fields as Record<string, string>;
+  if (metadata && typeof metadata === 'object' && 'fields' in metadata) {
+    const fields = metadata.fields as Record<string, string>;
     const decryptedFields: Record<string, string> = {};
 
     for (const [key, encryptedValue] of Object.entries(fields)) {

@@ -17,6 +17,7 @@ import { CredentialListItem } from '@/types/workflows';
 import { useClient } from '@/components/providers/ClientProvider';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 export default function CredentialsPage() {
   const { currentClient } = useClient();
@@ -35,7 +36,7 @@ export default function CredentialsPage() {
       const data = await response.json();
       setCredentials(data.credentials || []);
     } catch (error) {
-      console.error('Failed to fetch credentials:', error);
+      logger.error({ error }, 'Failed to fetch credentials');
     } finally {
       setLoading(false);
     }

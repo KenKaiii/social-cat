@@ -53,7 +53,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Only admin can change global model setting
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@socialcat.com';
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail) {
+      logger.error(
+        { userId: session.user.id },
+        'ADMIN_EMAIL environment variable is not configured'
+      );
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      );
+    }
     if (session.user.email !== adminEmail) {
       logger.warn(
         { userId: session.user.id, userEmail: session.user.email },

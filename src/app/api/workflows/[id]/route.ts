@@ -124,10 +124,15 @@ export async function PATCH(
 
       // Update trigger config
       if (body.trigger !== undefined) {
+        // Parse trigger from database (may be string or object depending on DB)
+        const existingTrigger = typeof workflow.trigger === 'string'
+          ? JSON.parse(workflow.trigger)
+          : workflow.trigger;
+
         updates.trigger = {
-          ...workflow.trigger,
+          type: existingTrigger.type,
           config: {
-            ...(workflow.trigger as { type: string; config: Record<string, unknown> }).config,
+            ...existingTrigger.config,
             ...body.trigger.config,
           },
         };
@@ -163,9 +168,10 @@ export async function PATCH(
 
     return NextResponse.json({ error: 'No updates provided' }, { status: 400 });
   } catch (error) {
-    logger.error({ error }, 'Failed to update workflow');
+    logger.error({ error }, '❌ PATCH /api/workflows/[id] error');
+    logger.error({ error, stack: error instanceof Error ? error.stack : undefined, message: error instanceof Error ? error.message : String(error) }, 'Failed to update workflow');
     return NextResponse.json(
-      { error: 'Failed to update workflow' },
+      { error: 'Failed to update workflow', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

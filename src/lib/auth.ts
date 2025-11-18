@@ -156,8 +156,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         // Fallback: Check against environment variables (admin user - backward compatibility)
-        const adminEmail = process.env.ADMIN_EMAIL || 'admin@socialcat.com';
-        const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+
+        if (!adminEmail || !adminPassword) {
+          throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required');
+        }
 
         if (email === adminEmail) {
           // Check if admin password is hashed (starts with $2a$, $2b$, or $2y$ for bcrypt)

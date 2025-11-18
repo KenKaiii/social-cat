@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { WorkflowCredentialsStatus } from './workflow-credentials-status';
+import { logger } from '@/lib/logger';
 
 interface CredentialsConfigDialogProps {
   workflowId: string;
@@ -39,7 +40,7 @@ export function CredentialsConfigDialog({
           setHasCredentials(data.credentials && data.credentials.length > 0);
         }
       } catch (error) {
-        console.error('Failed to check credentials:', error);
+        logger.error({ error }, 'Failed to check credentials');
       } finally {
         setLoading(false);
       }

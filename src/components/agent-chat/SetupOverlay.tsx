@@ -90,7 +90,7 @@ export function SetupOverlay({ workspaceDir, onComplete }: SetupOverlayProps) {
         )}
 
         {output.length > 0 && (
-          <div className="mb-4 p-3 bg-muted rounded max-h-48 overflow-y-auto">
+          <div className="mb-4 p-3 bg-muted rounded max-h-48 overflow-y-auto scrollbar-none">
             <pre className="text-12 text-foreground font-mono whitespace-pre-wrap">
               {output.join('')}
             </pre>

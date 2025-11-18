@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
@@ -15,7 +16,7 @@ export default function Error({
 }) {
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error(error);
+    logger.error({ error }, 'Application error boundary triggered');
   }, [error]);
 
   return (

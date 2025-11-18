@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { getAgentWorkspaceDir } from '@/lib/agent-workspace';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -68,7 +69,7 @@ export async function GET() {
 
     return Response.json({ commands });
   } catch (error) {
-    console.error('Error loading commands:', error);
+    logger.error({ error }, 'Error loading commands');
     return Response.json({ commands: BUILT_IN_COMMANDS });
   }
 }

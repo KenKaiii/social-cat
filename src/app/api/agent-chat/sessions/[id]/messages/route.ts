@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { agentChatMessagesTable } from '@/lib/schema';
 import { eq, asc } from 'drizzle-orm';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -27,7 +28,7 @@ export async function GET(
 
     return Response.json({ messages });
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    logger.error({ error }, 'Error fetching messages');
     return new Response('Internal server error', { status: 500 });
   }
 }
