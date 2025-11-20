@@ -1,0 +1,26 @@
+{
+  "name": "Test Webhook",
+  "description": "Simple webhook test workflow to verify authentication bypass",
+  "version": "1.0.0",
+  "config": {
+    "steps": [
+      {
+        "id": "log_webhook_data",
+        "type": "core.log",
+        "params": {
+          "message": "Webhook received: {{trigger.body}}",
+          "level": "info"
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "type": "webhook",
+    "config": {}
+  },
+  "metadata": {
+    "author": "system",
+    "tags": ["test", "webhook"],
+    "requiresCredentials": []
+  }
+}

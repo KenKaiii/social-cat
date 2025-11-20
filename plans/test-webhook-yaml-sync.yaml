@@ -1,0 +1,18 @@
+name: Webhook YAML Sync Test
+description: Test webhook with webhookSync flag in YAML
+trigger: webhook
+webhookSync: true
+output: json
+returnValue: "{{finalResult}}"
+steps:
+  - module: utilities.javascript.execute
+    id: process-data
+    inputs:
+      code: |
+        return {
+          status: "success",
+          message: "Webhook with YAML sync config works!",
+          timestamp: new Date().toISOString(),
+          processingTime: Math.floor(Math.random() * 100) + "ms"
+        };
+    outputAs: finalResult

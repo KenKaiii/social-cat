@@ -1,0 +1,29 @@
+name: Webhook with Return Value
+description: Test webhook returning specific step outputs
+trigger: webhook
+output: json
+returnValue: "{{result}}"
+steps:
+  - module: utilities.javascript.execute
+    id: step1-calc
+    inputs:
+      code: |
+        return {
+          calculation: 100 + 200,
+          internalData: "This should not be in final output"
+        };
+    outputAs: calcResult
+
+  - module: utilities.javascript.execute
+    id: step2-format
+    inputs:
+      code: |
+        return {
+          message: "Calculation complete!",
+          value: calcResult.calculation,
+          doubled: calcResult.calculation * 2,
+          timestamp: new Date().toISOString()
+        };
+      context:
+        calcResult: "{{calcResult}}"
+    outputAs: result

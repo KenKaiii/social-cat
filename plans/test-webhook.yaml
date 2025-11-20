@@ -1,0 +1,16 @@
+name: Test Webhook Authentication
+description: Simple webhook workflow to test authentication bypass
+trigger: webhook
+output: json
+steps:
+  - module: utilities.javascript.execute
+    id: echo-webhook-data
+    inputs:
+      code: |
+        return {
+          message: "Webhook received successfully!",
+          receivedData: trigger.body,
+          receivedHeaders: trigger.headers,
+          receivedQuery: trigger.query,
+          timestamp: new Date().toISOString()
+        };

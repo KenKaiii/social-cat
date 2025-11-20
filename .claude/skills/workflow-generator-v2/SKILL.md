@@ -36,25 +36,29 @@ Use AskUserQuestion tool to gather:
 - For social media: Need deduplication? (Yes/No)
 - For AI workflows: Which model? (GPT-4o-mini, Claude, etc.)
 
-## Step 2: Load Trigger-Specific Context
+## Step 2: Load Context Files
 
-**CRITICAL: Use Read tool to load ONLY the reference file for the chosen trigger type.**
+**CRITICAL: Use Read tool to load these reference files:**
 
-Based on user's trigger choice, read ONE file:
+**Always read (required):**
+1. `.claude/skills/workflow-generator-v2/references/common-modules.md`
+   - Module categories and search instructions
+   - Common patterns for JavaScript, AI, arrays, etc.
 
-- **Webhook** → Read `.claude/skills/workflow-generator-v2/references/webhook-trigger.md`
-- **Chat** → Read `.claude/skills/workflow-generator-v2/references/chat-trigger.md`
-- **Cron** → Read `.claude/skills/workflow-generator-v2/references/cron-trigger.md`
-- **Manual** → Read `.claude/skills/workflow-generator-v2/references/manual-trigger.md`
-- **Telegram/Discord** → Read `.claude/skills/workflow-generator-v2/references/bot-trigger.md`
+**Read based on trigger type (required):**
+2. Based on user's trigger choice:
+   - **Webhook** → `.claude/skills/workflow-generator-v2/references/webhook-trigger.md`
+   - **Chat** → `.claude/skills/workflow-generator-v2/references/chat-trigger.md`
+   - **Cron** → `.claude/skills/workflow-generator-v2/references/cron-trigger.md`
+   - **Manual** → `.claude/skills/workflow-generator-v2/references/manual-trigger.md`
 
-The reference file contains:
-- Available trigger variables
-- Configuration options
-- Complete working example
-- Critical patterns and rules
+These files contain:
+- Available trigger variables (webhook: trigger.body, chat: trigger.message, etc.)
+- Trigger configuration options
+- Complete working examples
+- Critical rules and patterns
 
-**Do NOT proceed without reading the reference file!**
+**Do NOT proceed without reading BOTH files!**
 
 ## Step 3: Search for Modules (If Needed)
 

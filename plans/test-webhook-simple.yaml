@@ -1,0 +1,14 @@
+name: Simple Webhook Test
+description: Test webhook with simple response
+trigger: webhook
+output: json
+steps:
+  - module: utilities.javascript.execute
+    id: simple-response
+    inputs:
+      code: |
+        return {
+          message: "Webhook executed successfully!",
+          timestamp: new Date().toISOString(),
+          random: Math.random()
+        };
