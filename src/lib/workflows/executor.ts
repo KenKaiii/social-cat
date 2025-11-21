@@ -932,6 +932,7 @@ async function loadUserCredentialsFromDB(userId: string): Promise<Record<string,
       'openai': ['openai_api_key', 'openai'],
       'anthropic': ['anthropic_api_key', 'anthropic'],
       'openrouter': ['openrouter_api_key', 'openrouter'],
+      'todoist': ['todoist_api_key', 'todoist'],
     };
 
     // Apply aliases: check if any credential ID in the list exists, then make it available under all alias names

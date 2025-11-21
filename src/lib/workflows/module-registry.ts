@@ -4488,6 +4488,146 @@ export function getModuleRegistry(): ModuleCategory[] {
           ],
         },
         {
+          name: 'todoist',
+          functions: [
+            {
+              name: 'getAllTasks',
+              description: "Execute getAllTasks",
+              signature: 'getAllTasks(input)',
+            },
+            {
+              name: 'getTask',
+              description: "Execute getTask",
+              signature: 'getTask(input)',
+            },
+            {
+              name: 'createTask',
+              description: "Execute createTask",
+              signature: 'createTask(input)',
+            },
+            {
+              name: 'updateTask',
+              description: "Execute updateTask",
+              signature: 'updateTask(input)',
+            },
+            {
+              name: 'closeTask',
+              description: "Execute closeTask",
+              signature: 'closeTask(input)',
+            },
+            {
+              name: 'reopenTask',
+              description: "Execute reopenTask",
+              signature: 'reopenTask(input)',
+            },
+            {
+              name: 'deleteTask',
+              description: "Execute deleteTask",
+              signature: 'deleteTask(input)',
+            },
+            {
+              name: 'getAllProjects',
+              description: "Execute getAllProjects",
+              signature: 'getAllProjects(input)',
+            },
+            {
+              name: 'getProject',
+              description: "Execute getProject",
+              signature: 'getProject(input)',
+            },
+            {
+              name: 'createProject',
+              description: "Execute createProject",
+              signature: 'createProject(input)',
+            },
+            {
+              name: 'updateProject',
+              description: "Execute updateProject",
+              signature: 'updateProject(input)',
+            },
+            {
+              name: 'deleteProject',
+              description: "Execute deleteProject",
+              signature: 'deleteProject(input)',
+            },
+            {
+              name: 'getAllSections',
+              description: "Execute getAllSections",
+              signature: 'getAllSections(input)',
+            },
+            {
+              name: 'getSection',
+              description: "Execute getSection",
+              signature: 'getSection(input)',
+            },
+            {
+              name: 'createSection',
+              description: "Execute createSection",
+              signature: 'createSection(input)',
+            },
+            {
+              name: 'updateSection',
+              description: "Execute updateSection",
+              signature: 'updateSection(input)',
+            },
+            {
+              name: 'deleteSection',
+              description: "Execute deleteSection",
+              signature: 'deleteSection(input)',
+            },
+            {
+              name: 'getAllComments',
+              description: "Execute getAllComments",
+              signature: 'getAllComments(input)',
+            },
+            {
+              name: 'getComment',
+              description: "Execute getComment",
+              signature: 'getComment(input)',
+            },
+            {
+              name: 'createComment',
+              description: "Execute createComment",
+              signature: 'createComment(input)',
+            },
+            {
+              name: 'updateComment',
+              description: "Execute updateComment",
+              signature: 'updateComment(input)',
+            },
+            {
+              name: 'deleteComment',
+              description: "Execute deleteComment",
+              signature: 'deleteComment(input)',
+            },
+            {
+              name: 'getAllLabels',
+              description: "Execute getAllLabels",
+              signature: 'getAllLabels(input)',
+            },
+            {
+              name: 'getLabel',
+              description: "Execute getLabel",
+              signature: 'getLabel(input)',
+            },
+            {
+              name: 'createLabel',
+              description: "Execute createLabel",
+              signature: 'createLabel(input)',
+            },
+            {
+              name: 'updateLabel',
+              description: "Execute updateLabel",
+              signature: 'updateLabel(input)',
+            },
+            {
+              name: 'deleteLabel',
+              description: "Execute deleteLabel",
+              signature: 'deleteLabel(input)',
+            },
+          ],
+        },
+        {
           name: 'typeform',
           functions: [
             {
@@ -4564,16 +4704,6 @@ export function getModuleRegistry(): ModuleCategory[] {
               name: 'submitPost',
               description: "Execute submitPost",
               signature: 'submitPost(options)',
-            },
-            {
-              name: 'commentOnPost',
-              description: "Comment on post",
-              signature: 'commentOnPost(options)',
-            },
-            {
-              name: 'replyToComment',
-              description: "Reply to comment",
-              signature: 'replyToComment(options)',
             },
             {
               name: 'getSubredditPosts',
