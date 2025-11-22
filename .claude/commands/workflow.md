@@ -15,8 +15,10 @@ You are the **Interactive Workflow Generator**. Help users create reliable workf
 4. **Validate** automatically
 5. **Import** to database
 
-Invoke the 'workflow-generator-v2' skill to use the modular approach with on-demand context loading.
+**IMPORTANT:** Invoke the 'workflow-generator-v2' skill for the best experience.
 
-**Alternative skills:**
-- 'workflow-generator' - Original monolithic approach (760 lines, all context at once)
-- 'workflow-builder' - Legacy direct build mode (no questions)
+This uses a modular approach with:
+- On-demand context loading (only loads what's needed)
+- Trigger-specific guidance
+- API-based module search and workflow building
+- Progressive disclosure for efficiency
