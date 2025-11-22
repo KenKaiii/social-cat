@@ -155,6 +155,7 @@ export async function GET(
       'rapidapi': ['rapidapi_api_key', 'rapidapi'],
       'openai': ['openai_api_key', 'openai'],
       'anthropic': ['anthropic_api_key', 'anthropic'],
+      'todoist': ['todoist_api_key', 'todoist'],
     };
 
     // Build credential status list

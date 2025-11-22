@@ -467,6 +467,22 @@ export const PLATFORM_CONFIGS: Record<string, PlatformConfig> = {
     ]
   },
 
+  todoist: {
+    id: 'todoist',
+    name: 'Todoist',
+    category: 'Productivity',
+    fields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+        placeholder: 'Your Todoist API token',
+        description: 'API token from Todoist Settings > Integrations > Developer'
+      }
+    ]
+  },
+
   googlesheets: {
     id: 'googlesheets',
     name: 'Google Sheets (Service Account)',

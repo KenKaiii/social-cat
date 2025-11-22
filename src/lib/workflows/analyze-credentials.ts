@@ -370,6 +370,38 @@ const PLATFORM_CAPABILITIES: Record<string, PlatformCapability> = {
   'linear': { category: 'api_key' },
   'typeform': { category: 'api_key' },
   'calendly': { category: 'api_key' },
+  'todoist': {
+    category: 'api_key',
+    functionRequirements: {
+      'getAllTasks': 'api_key',
+      'getTask': 'api_key',
+      'createTask': 'api_key',
+      'updateTask': 'api_key',
+      'closeTask': 'api_key',
+      'reopenTask': 'api_key',
+      'deleteTask': 'api_key',
+      'getAllProjects': 'api_key',
+      'getProject': 'api_key',
+      'createProject': 'api_key',
+      'updateProject': 'api_key',
+      'deleteProject': 'api_key',
+      'getAllSections': 'api_key',
+      'getSection': 'api_key',
+      'createSection': 'api_key',
+      'updateSection': 'api_key',
+      'deleteSection': 'api_key',
+      'getAllComments': 'api_key',
+      'getComment': 'api_key',
+      'createComment': 'api_key',
+      'updateComment': 'api_key',
+      'deleteComment': 'api_key',
+      'getAllLabels': 'api_key',
+      'getLabel': 'api_key',
+      'createLabel': 'api_key',
+      'updateLabel': 'api_key',
+      'deleteLabel': 'api_key',
+    }
+  },
 
   // Cloud Storage
   'google-drive': {
@@ -807,6 +839,7 @@ export function getPlatformDisplayName(platform: string): string {
     linear: 'Linear',
     typeform: 'Typeform',
     calendly: 'Calendly',
+    todoist: 'Todoist',
 
     // Cloud Storage
     'google-drive': 'Google Drive',
@@ -899,6 +932,7 @@ export function getPlatformIcon(platform: string): string {
     linear: 'CheckSquare',
     typeform: 'ListChecks',
     calendly: 'Calendar',
+    todoist: 'CheckCircle',
 
     // Cloud Storage
     'google-drive': 'FolderOpen',

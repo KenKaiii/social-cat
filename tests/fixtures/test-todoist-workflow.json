@@ -1,0 +1,47 @@
+{
+  "version": "1.0",
+  "name": "Test Todoist Workflow",
+  "description": "Test workflow for Todoist module integration",
+  "trigger": {
+    "type": "manual"
+  },
+  "config": {
+    "steps": [
+      {
+        "id": "createTask",
+        "module": "productivity.todoist.createTask",
+        "inputs": {
+          "content": "Test task from b0t workflow",
+          "description": "This task was created by the b0t automation platform",
+          "priority": 3,
+          "dueString": "tomorrow",
+          "apiKey": "{{credential.todoist}}"
+        },
+        "outputAs": "taskResult"
+      },
+      {
+        "id": "getAllTasks",
+        "module": "productivity.todoist.getAllTasks",
+        "inputs": {
+          "apiKey": "{{credential.todoist}}"
+        },
+        "outputAs": "allTasks"
+      },
+      {
+        "id": "createProject",
+        "module": "productivity.todoist.createProject",
+        "inputs": {
+          "name": "B0t Test Project",
+          "color": "blue",
+          "isFavorite": false,
+          "apiKey": "{{credential.todoist}}"
+        },
+        "outputAs": "projectResult"
+      }
+    ],
+    "outputDisplay": {
+      "type": "json",
+      "value": "{{taskResult}}"
+    }
+  }
+}
